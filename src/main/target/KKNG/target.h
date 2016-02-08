@@ -17,7 +17,7 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "CC3DF3"
+#define TARGET_BOARD_IDENTIFIER "KKNG"
 
 #define LED0
 
