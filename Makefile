@@ -756,6 +756,8 @@ SPRACINGF3MINI_SRC	 = \
 KKNG_SRC = \
            $(STM32F30x_COMMON_SRC) \
            drivers/accgyro_mpu.c \
+		   drivers/barometer_ms5611.c \
+		   drivers/barometer_bmp280.c \
            drivers/display_ug2864hsweg01.c \
            drivers/accgyro_spi_mpu6000.c \
 		   drivers/light_ws2811strip.c \

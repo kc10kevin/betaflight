@@ -47,6 +47,10 @@
 #define USE_ACC_SPI_MPU6000
 #define ACC_MPU6000_ALIGN CW270_DEG
 
+#define BARO
+#define USE_BARO_MS5611
+#define USE_BARO_BMP280
+
 #define USE_SPI
 
 #define USE_SPI_DEVICE_1
@@ -123,19 +127,33 @@
 //#define SOFTSERIAL_1_TIMER_TX_HARDWARE 3
 
 #define USE_I2C
-#define I2C_DEVICE (I2CDEV_2) // SDA (PB9/AF4), SCL (PB8/AF4)
+#define I2C_DEVICE (I2CDEV_1) // SDA (PB9/AF4), SCL (PB8/AF4)
 
-#define I2C2_SCL_GPIO        GPIOB
-#define I2C2_SCL_GPIO_AF     GPIO_AF_4
-#define I2C2_SCL_PIN         GPIO_Pin_8
-#define I2C2_SCL_PIN_SOURCE  GPIO_PinSource8
-#define I2C2_SCL_CLK_SOURCE  RCC_AHBPeriph_GPIOB
-#define I2C2_SDA_GPIO        GPIOB
-#define I2C2_SDA_GPIO_AF     GPIO_AF_4
-#define I2C2_SDA_PIN         GPIO_Pin_9
-#define I2C2_SDA_PIN_SOURCE  GPIO_PinSource9
-#define I2C2_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
+//#define I2C1_SCL_GPIO        GPIOB
+//#define I2C1_SCL_GPIO_AF     GPIO_AF_4
+//#define I2C1_SCL_PIN         GPIO_Pin_8
+//#define I2C1_SCL_PIN_SOURCE  GPIO_PinSource8
+//#define I2C1_SCL_CLK_SOURCE  RCC_AHBPeriph_GPIOB
+//#define I2C1_SDA_GPIO        GPIOB
+//#define I2C1_SDA_GPIO_AF     GPIO_AF_4
+//#define I2C1_SDA_PIN         GPIO_Pin_9
+//#define I2C1_SDA_PIN_SOURCE  GPIO_PinSource9
+//#define I2C1_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
 
+// Original Code - Changedkb
+//#define USE_I2C
+//#define I2C_DEVICE (I2CDEV_2) // SDA (PB9/AF4), SCL (PB8/AF4)
+
+//#define I2C2_SCL_GPIO        GPIOB
+//#define I2C2_SCL_GPIO_AF     GPIO_AF_4
+//#define I2C2_SCL_PIN         GPIO_Pin_8
+//#define I2C2_SCL_PIN_SOURCE  GPIO_PinSource8
+//#define I2C2_SCL_CLK_SOURCE  RCC_AHBPeriph_GPIOB
+//#define I2C2_SDA_GPIO        GPIOB
+//#define I2C2_SDA_GPIO_AF     GPIO_AF_4
+//#define I2C2_SDA_PIN         GPIO_Pin_9
+//#define I2C2_SDA_PIN_SOURCE  GPIO_PinSource9
+//#define I2C2_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
 
 #define USE_ADC
 #define BOARD_HAS_VOLTAGE_DIVIDER
