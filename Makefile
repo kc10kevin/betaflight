@@ -754,22 +754,22 @@ SPRACINGF3MINI_SRC	 = \
 #		   $(FATFS_SRC)
 
 KKNG_SRC = \
-           $(STM32F30x_COMMON_SRC) \
-           drivers/accgyro_mpu.c \
+		   $(STM32F30x_COMMON_SRC) \
+		   drivers/accgyro_mpu.c \
 		   drivers/barometer_ms5611.c \
 		   drivers/barometer_bmp280.c \
-           drivers/display_ug2864hsweg01.c \
-           drivers/accgyro_spi_mpu6000.c \
+		   drivers/display_ug2864hsweg01.c \
+		   drivers/accgyro_spi_mpu6000.c \
 		   drivers/light_ws2811strip.c \
 		   drivers/light_ws2811strip_stm32f30x.c \
-           drivers/serial_usb_vcp.c \
-           drivers/flash_m25p16.c \
-           drivers/sonar_hcsr04.c \
-           drivers/serial_softserial.c \
-           io/flashfs.c \
-           $(HIGHEND_SRC) \
-           $(COMMON_SRC) \
-           $(VCP_SRC)
+		   drivers/serial_usb_vcp.c \
+		   drivers/flash_m25p16.c \
+		   drivers/sonar_hcsr04.c \
+		   drivers/serial_softserial.c \
+		   io/flashfs.c \
+		   $(HIGHEND_SRC) \
+		   $(COMMON_SRC) \
+		   $(VCP_SRC)
 
 # Search path and source files for the ST stdperiph library
 VPATH		:= $(VPATH):$(STDPERIPH_DIR)/src
