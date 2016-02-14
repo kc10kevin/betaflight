@@ -41,11 +41,11 @@
 
 #define GYRO
 #define USE_GYRO_SPI_MPU6000
-#define GYRO_MPU6000_ALIGN CW270_DEG
+#define GYRO_MPU6000_ALIGN CW180_DEG  // changedkb 270
 
 #define ACC
 #define USE_ACC_SPI_MPU6000
-#define ACC_MPU6000_ALIGN CW270_DEG
+#define ACC_MPU6000_ALIGN CW180_DEG  // changedkb 270
 
 #define BARO
 #define USE_BARO_MS5611
@@ -66,6 +66,7 @@
 #define SPI1_MOSI_PIN_SOURCE    GPIO_PinSource7
 
 #define USE_SPI_DEVICE_2 // PB12,13,14,15 on AF5
+/*   not needed - delete
 #define SPI2_GPIO               GPIOB
 #define SPI2_GPIO_PERIPHERAL    RCC_AHBPeriph_GPIOB
 #define SPI2_NSS_PIN            Pin_12
@@ -76,6 +77,7 @@
 #define SPI2_MISO_PIN_SOURCE    GPIO_PinSource14
 #define SPI2_MOSI_PIN           Pin_15
 #define SPI2_MOSI_PIN_SOURCE    GPIO_PinSource15
+*/
 
 #define M25P16_CS_GPIO          GPIOB
 #define M25P16_CS_PIN           GPIO_Pin_12
@@ -83,6 +85,7 @@
 
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
+//#define ENABLE_BLACKBOX_LOGGING_ON_SPIFLASH_BY_DEFAULT
 
 #define USABLE_TIMER_CHANNEL_COUNT 8
 
@@ -93,14 +96,14 @@
 #define USE_SOFTSERIAL1
 #define SERIAL_PORT_COUNT 5
 
-//#ifndef UART1_GPIO
+#ifndef UART1_GPIO
 #define UART1_TX_PIN        GPIO_Pin_9  // PA9
 #define UART1_RX_PIN        GPIO_Pin_10 // PA10
 #define UART1_GPIO          GPIOA
 #define UART1_GPIO_AF       GPIO_AF_7
 #define UART1_TX_PINSOURCE  GPIO_PinSource9
 #define UART1_RX_PINSOURCE  GPIO_PinSource10
-//#endif
+#endif
 
 #define UART2_TX_PIN        GPIO_Pin_14 // PA14
 #define UART2_RX_PIN        GPIO_Pin_15 // PA15
@@ -109,51 +112,32 @@
 #define UART2_TX_PINSOURCE  GPIO_PinSource14
 #define UART2_RX_PINSOURCE  GPIO_PinSource15
 
-//#ifndef UART3_GPIO
+#ifndef UART3_GPIO
 #define UART3_TX_PIN        GPIO_Pin_10 // PB10 (AF7)
 #define UART3_RX_PIN        GPIO_Pin_11 // PB11 (AF7)
 #define UART3_GPIO_AF       GPIO_AF_7
 #define UART3_GPIO          GPIOB
 #define UART3_TX_PINSOURCE  GPIO_PinSource10
 #define UART3_RX_PINSOURCE  GPIO_PinSource11
-//#endif
+#endif
 
 #define SOFTSERIAL_1_TIMER TIM3
 #define SOFTSERIAL_1_TIMER_RX_HARDWARE 1
 #define SOFTSERIAL_1_TIMER_TX_HARDWARE 2
 
-// original code - changed kb
-//#define SOFTSERIAL_1_TIMER_RX_HARDWARE 4
-//#define SOFTSERIAL_1_TIMER_TX_HARDWARE 3
-
 #define USE_I2C
 #define I2C_DEVICE (I2CDEV_1) // SDA (PB9/AF4), SCL (PB8/AF4)
 
-//#define I2C1_SCL_GPIO        GPIOB
-//#define I2C1_SCL_GPIO_AF     GPIO_AF_4
-//#define I2C1_SCL_PIN         GPIO_Pin_8
-//#define I2C1_SCL_PIN_SOURCE  GPIO_PinSource8
-//#define I2C1_SCL_CLK_SOURCE  RCC_AHBPeriph_GPIOB
-//#define I2C1_SDA_GPIO        GPIOB
-//#define I2C1_SDA_GPIO_AF     GPIO_AF_4
-//#define I2C1_SDA_PIN         GPIO_Pin_9
-//#define I2C1_SDA_PIN_SOURCE  GPIO_PinSource9
-//#define I2C1_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
-
-// Original Code - Changedkb
-//#define USE_I2C
-//#define I2C_DEVICE (I2CDEV_2) // SDA (PB9/AF4), SCL (PB8/AF4)
-
-//#define I2C2_SCL_GPIO        GPIOB
-//#define I2C2_SCL_GPIO_AF     GPIO_AF_4
-//#define I2C2_SCL_PIN         GPIO_Pin_8
-//#define I2C2_SCL_PIN_SOURCE  GPIO_PinSource8
-//#define I2C2_SCL_CLK_SOURCE  RCC_AHBPeriph_GPIOB
-//#define I2C2_SDA_GPIO        GPIOB
-//#define I2C2_SDA_GPIO_AF     GPIO_AF_4
-//#define I2C2_SDA_PIN         GPIO_Pin_9
-//#define I2C2_SDA_PIN_SOURCE  GPIO_PinSource9
-//#define I2C2_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
+#define I2C1_SCL_GPIO        GPIOB
+#define I2C1_SCL_GPIO_AF     GPIO_AF_4
+#define I2C1_SCL_PIN         GPIO_Pin_8
+#define I2C1_SCL_PIN_SOURCE  GPIO_PinSource8
+#define I2C1_SCL_CLK_SOURCE  RCC_AHBPeriph_GPIOB
+#define I2C1_SDA_GPIO        GPIOB
+#define I2C1_SDA_GPIO_AF     GPIO_AF_4
+#define I2C1_SDA_PIN         GPIO_Pin_9
+#define I2C1_SDA_PIN_SOURCE  GPIO_PinSource9
+#define I2C1_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
 
 #define USE_ADC
 #define BOARD_HAS_VOLTAGE_DIVIDER

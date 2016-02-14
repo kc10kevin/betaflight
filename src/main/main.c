@@ -408,7 +408,12 @@ void init(void)
         serialRemovePort(SERIAL_PORT_SOFTSERIAL1);
     }
 #endif
-
+// addedkb
+#if defined(KKNG) && defined(SONAR) && defined(USE_SOFTSERIAL1)
+    if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
+        serialRemovePort(SERIAL_PORT_SOFTSERIAL1);
+    }
+#endif
 
 #ifdef USE_I2C
 #if defined(NAZE)

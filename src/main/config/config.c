@@ -379,7 +379,7 @@ static void resetConf(void)
     masterConfig.version = EEPROM_CONF_VERSION;
     masterConfig.mixerMode = MIXER_QUADX;
     featureClearAll();
-#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE)
+#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(KKNG) // addedkb
     featureSet(FEATURE_RX_PPM);
 #endif
 
@@ -544,7 +544,8 @@ static void resetConf(void)
     applyDefaultLedStripConfig(masterConfig.ledConfigs);
 #endif
 
-#ifdef SPRACINGF3
+//#ifdef SPRACINGF3   changedkb
+#if defined(SPRACINGF3) || defined(KKNG)
     featureSet(FEATURE_BLACKBOX);
     masterConfig.blackbox_device = 1;
 #ifdef TRANSPONDER

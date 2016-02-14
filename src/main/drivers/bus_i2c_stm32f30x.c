@@ -30,6 +30,7 @@
 
 #ifndef SOFT_I2C
 
+/*
 #if defined(KKNG)  // changedkb
 
 #define I2C1_SCL_GPIO        GPIOB
@@ -45,6 +46,8 @@
 
 #else
 
+*/
+#if !defined(I2C1_SCL_GPIO)  //  addedkb
 #define I2C1_SCL_GPIO        GPIOB
 #define I2C1_SCL_GPIO_AF     GPIO_AF_4
 #define I2C1_SCL_PIN         GPIO_Pin_6
@@ -55,7 +58,6 @@
 #define I2C1_SDA_PIN         GPIO_Pin_7
 #define I2C1_SDA_PIN_SOURCE  GPIO_PinSource7
 #define I2C1_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
-
 #endif
 
 #if !defined(I2C2_SCL_GPIO)
