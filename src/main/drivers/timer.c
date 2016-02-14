@@ -348,10 +348,10 @@ const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
     { TIM3,  GPIOB, Pin_0,  TIM_Channel_3, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource0,  GPIO_AF_2}, // SS1 - PB0  - *TIM3_CH3, TIM1_CH2N, TIM8_CH2N
     { TIM3,  GPIOB, Pin_1,  TIM_Channel_4, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_2}, // SS1 - PB1  - *TIM3_CH4, TIM1_CH3N, TIM8_CH3N
 
-    { TIM4,  GPIOB, Pin_7,  TIM_Channel_2, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource7,  GPIO_AF_2}, // PWM1 - S1
-    { TIM4,  GPIOB, Pin_6,  TIM_Channel_1, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource6,  GPIO_AF_2}, // PWM2 - S2
-    { TIM17,  GPIOB, Pin_5,  TIM_Channel_1, TIM1_TRG_COM_TIM17_IRQn, 1, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_10}, // PWM3 - S3
-    { TIM16,  GPIOB, Pin_4,  TIM_Channel_1, TIM1_UP_TIM16_IRQn,     1, Mode_AF_PP,      GPIO_PinSource4,  GPIO_AF_1}, // PWM4 - S4
+    { TIM4,  GPIOB, Pin_7,  TIM_Channel_2, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource7,  GPIO_AF_2}, // PWM4 - S1
+    { TIM4,  GPIOB, Pin_6,  TIM_Channel_1, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource6,  GPIO_AF_2}, // PWM5 - S2
+    { TIM17,  GPIOB, Pin_5,  TIM_Channel_1, TIM1_TRG_COM_TIM17_IRQn, 1, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_10}, // PWM6 - S3
+    { TIM16,  GPIOB, Pin_4,  TIM_Channel_1, TIM1_UP_TIM16_IRQn,     1, Mode_AF_PP,      GPIO_PinSource4,  GPIO_AF_1}, // PWM7 - S4
 //    { TIM3,  GPIOB, Pin_5,  TIM_Channel_2, TIM3_IRQn,               1, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_2}, // PWM3 - S3
 //    { TIM3,  GPIOB, Pin_4,  TIM_Channel_1, TIM3_IRQn,               1, Mode_AF_PP,      GPIO_PinSource4,  GPIO_AF_2}, // PWM4 - S4
  
