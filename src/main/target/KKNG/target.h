@@ -51,8 +51,8 @@
 #define USE_BARO_BMP280
 
 #define USE_SPI
-
 #define USE_SPI_DEVICE_1
+/*
 #define SPI1_GPIO               GPIOA
 #define SPI1_GPIO_PERIPHERAL    RCC_AHBPeriph_GPIOA
 #define SPI1_NSS_PIN            Pin_4
@@ -63,7 +63,7 @@
 #define SPI1_MISO_PIN_SOURCE    GPIO_PinSource6
 #define SPI1_MOSI_PIN           GPIO_Pin_7
 #define SPI1_MOSI_PIN_SOURCE    GPIO_PinSource7
-
+*/
 #define USE_SPI_DEVICE_2 // PB12,13,14,15 on AF5
 
 #define M25P16_CS_GPIO          GPIOB
@@ -164,8 +164,8 @@
 #define WS2811_DMA_HANDLER_IDENTIFER    DMA1_CH2_HANDLER
 
 #define BLACKBOX
-#define DISPLAY
-#define GPS
+//#define DISPLAY
+//#define GPS
 #define SERIAL_RX
 #define TELEMETRY
 #define USE_SERVOS
