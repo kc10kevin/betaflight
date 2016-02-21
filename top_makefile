@@ -12,7 +12,7 @@ ALL_TARGETS += motolab
 ALL_TARGETS += rmdo
 ALL_TARGETS += ircfusionf3
 ALL_TARGETS += afromini
-
+ 
 CLEAN_TARGETS     := $(addprefix clean_, $(ALL_TARGETS)) 
 
 clean_naze naze :                         opts := TARGET=NAZE
