@@ -130,8 +130,8 @@ void setGyroSamplingSpeed(uint16_t looptime) {
             masterConfig.mag_hardware = 0;
         }
 #endif
+        masterConfig.gyro_sync_denom = constrain(looptime / gyroSampleRate, 1, maxDivider);
     }
-    masterConfig.gyro_sync_denom = constrain(looptime / gyroSampleRate, 1, maxDivider);
 }
 
 void useRcControlsConfig(modeActivationCondition_t *modeActivationConditions, escAndServoConfig_t *escAndServoConfigToUse, pidProfile_t *pidProfileToUse);
@@ -167,7 +167,7 @@ static const box_t boxes[CHECKBOX_ITEM_COUNT + 1] = {
     { BOXGOV, "GOVERNOR;", 18 },
     { BOXOSD, "OSD SW;", 19 },
     { BOXTELEMETRY, "TELEMETRY;", 20 },
-    { BOXGTUNE, "GTUNE;", 21 },
+   // { BOXGTUNE, "GTUNE;", 21 },
     { BOXSONAR, "SONAR;", 22 },
     { BOXSERVO1, "SERVO1;", 23 },
     { BOXSERVO2, "SERVO2;", 24 },
@@ -566,10 +566,6 @@ void mspInit(serialConfig_t *serialConfig)
         activeBoxIds[activeBoxIdCount++] = BOXFAILSAFE;
     }
 
-#ifdef GTUNE
-    activeBoxIds[activeBoxIdCount++] = BOXGTUNE;
-#endif
-
     memset(mspPorts, 0x00, sizeof(mspPorts));
     mspAllocateSerialPorts(serialConfig);
 }
@@ -603,7 +599,6 @@ static uint32_t packFlightModeFlags(void)
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXGOV)) << BOXGOV |
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXOSD)) << BOXOSD |
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXTELEMETRY)) << BOXTELEMETRY |
-        IS_ENABLED(IS_RC_MODE_ACTIVE(BOXGTUNE)) << BOXGTUNE |
         IS_ENABLED(FLIGHT_MODE(SONAR_MODE)) << BOXSONAR |
         IS_ENABLED(ARMING_FLAG(ARMED)) << BOXARM |
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXBLACKBOX)) << BOXBLACKBOX |
@@ -1068,7 +1063,7 @@ static bool processOutCommand(uint8_t cmdMSP)
         serialize16(masterConfig.failsafeConfig.failsafe_throttle);
         serialize8(masterConfig.failsafeConfig.failsafe_kill_switch);
         serialize16(masterConfig.failsafeConfig.failsafe_throttle_low_delay);
-        serialize8(1);
+        serialize8(masterConfig.failsafeConfig.failsafe_procedure);
         break;
 
     case MSP_RXFAIL_CONFIG:
@@ -1283,7 +1278,7 @@ static bool processInCommand(void)
         setGyroSamplingSpeed(read16());
         break;
     case MSP_SET_PID_CONTROLLER:
-        currentProfile->pidProfile.pidController = constrain(read8(), 1, 2);
+        currentProfile->pidProfile.pidController = read8();
         pidSetController(currentProfile->pidProfile.pidController);
         break;
     case MSP_SET_PID:
@@ -1613,8 +1608,7 @@ static bool processInCommand(void)
         masterConfig.failsafeConfig.failsafe_throttle = read16();
         masterConfig.failsafeConfig.failsafe_kill_switch = read8();
         masterConfig.failsafeConfig.failsafe_throttle_low_delay = read16();
-        //masterConfig.failsafeConfig.failsafe_procedure = read8();
-        read8();
+        masterConfig.failsafeConfig.failsafe_procedure = read8();
         break;
 
     case MSP_SET_RXFAIL_CONFIG:
@@ -1757,6 +1751,8 @@ static bool processInCommand(void)
                 // proceed with a success reply first
                 headSerialReply(0);
                 tailSerialReply();
+                // flush the transmit buffer
+                bufWriterFlush(writer);
                 // wait for all data to send
                 waitForSerialPortToFinishTransmitting(currentPort->port);
                 // Start to activate here

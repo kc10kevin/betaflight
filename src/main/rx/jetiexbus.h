@@ -18,24 +18,18 @@
 #pragma once
 
 
-#define LOWPASS_NUM_COEF 3
-#define LPF_ROUND(x) (x < 0 ? (x - 0.5f) : (x + 0.5f))
+#include "rx/rx.h"
 
-typedef struct lowpass_s {
-    bool init;
-    int16_t freq;                           // Normalized freq in 1/1000ths
-    float bf[LOWPASS_NUM_COEF];
-    float af[LOWPASS_NUM_COEF];
-    int64_t b[LOWPASS_NUM_COEF];
-    int64_t a[LOWPASS_NUM_COEF];
-    int16_t coeff_shift;
-    int16_t input_shift;
-    int32_t input_bias;
-    float xf[LOWPASS_NUM_COEF];
-    float yf[LOWPASS_NUM_COEF];
-    int32_t x[LOWPASS_NUM_COEF];
-    int32_t y[LOWPASS_NUM_COEF];
-} lowpass_t;
+bool jetiExBusInit(rxConfig_t *rxConfig, rxRuntimeConfig_t *rxRuntimeConfig, rcReadRawDataPtr *callback);
+uint8_t jetiExBusFrameStatus(void);
 
-void generateLowpassCoeffs2(int16_t freq, lowpass_t *filter);
-int32_t lowpassFixed(lowpass_t *filter, int32_t in, int16_t freq);
+
+#ifdef TELEMETRY
+
+#include "telemetry/telemetry.h"
+
+void initJetiExBusTelemetry(telemetryConfig_t *initialTelemetryConfig);
+void checkJetiExBusTelemetryState(void);
+void handleJetiExBusTelemetry(void);
+
+#endif //TELEMETRY

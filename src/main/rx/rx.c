@@ -50,6 +50,7 @@
 #include "rx/msp.h"
 #include "rx/xbus.h"
 #include "rx/ibus.h"
+#include "rx/jetiexbus.h"
 
 #include "rx/rx.h"
 
@@ -94,11 +95,6 @@ uint32_t rcInvalidPulsPeriod[MAX_SUPPORTED_RC_CHANNEL_COUNT];
 #define DELAY_5_HZ (1000000 / 5)
 #define SKIP_RC_ON_SUSPEND_PERIOD 1500000           // 1.5 second period in usec (call frequency independent)
 #define SKIP_RC_SAMPLES_ON_RESUME  2                // flush 2 samples to drop wrong measurements (timing independent)
-#ifdef STM32F303xC
-#define MAX_RC_CHANNELS_HIGH_PERFORMANCE 10         // Maximum channels allowed during fast refresh rates for more performance
-#else
-#define MAX_RC_CHANNELS_HIGH_PERFORMANCE 8          // Maximum channels allowed during fast refresh rates for more performance
-#endif
 
 rxRuntimeConfig_t rxRuntimeConfig;
 static rxConfig_t *rxConfig;
@@ -240,6 +236,10 @@ void serialRxInit(rxConfig_t *rxConfig)
             rxRefreshRate = 20000; // TODO - Verify speed
             enabled = ibusInit(rxConfig, &rxRuntimeConfig, &rcReadRawFunc);
             break;
+        case SERIALRX_JETIEXBUS:
+            rxRefreshRate = 5500;
+            enabled = jetiExBusInit(rxConfig, &rxRuntimeConfig, &rcReadRawFunc);
+            break;
     }
 
     if (!enabled) {
@@ -274,6 +274,8 @@ uint8_t serialRxFrameStatus(rxConfig_t *rxConfig)
             return xBusFrameStatus();
         case SERIALRX_IBUS:
             return ibusFrameStatus();
+        case SERIALRX_JETIEXBUS:
+            return jetiExBusFrameStatus();
     }
     return SERIAL_RX_FRAME_PENDING;
 }
@@ -457,16 +459,14 @@ static uint8_t getRxChannelCount(void) {
     static uint8_t maxChannelsAllowed;
 
     if (!maxChannelsAllowed) {
-        if (targetLooptime < 1000) {
-            if (MAX_RC_CHANNELS_HIGH_PERFORMANCE > rxRuntimeConfig.channelCount) {
-                maxChannelsAllowed = rxRuntimeConfig.channelCount;
-            } else {
-                maxChannelsAllowed = MAX_RC_CHANNELS_HIGH_PERFORMANCE;
-            }
-        } else {
+        uint8_t maxChannels = rxConfig->max_aux_channel + NON_AUX_CHANNEL_COUNT;
+        if (maxChannels > rxRuntimeConfig.channelCount) {
             maxChannelsAllowed = rxRuntimeConfig.channelCount;
+        } else {
+            maxChannelsAllowed = maxChannels;
         }
     }
+
     return maxChannelsAllowed;
 }
 

@@ -28,6 +28,7 @@
 
 #include "common/axis.h"
 #include "common/maths.h"
+#include "common/filter.h"
 
 #include "drivers/system.h"
 #include "drivers/pwm_output.h"
@@ -35,6 +36,7 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro.h"
 #include "drivers/system.h"
+#include "drivers/gyro_sync.h"
 
 #include "rx/rx.h"
 
@@ -50,7 +52,6 @@
 #include "flight/failsafe.h"
 #include "flight/pid.h"
 #include "flight/imu.h"
-#include "flight/lowpass.h"
 
 #include "config/runtime_config.h"
 #include "config/config.h"
@@ -77,7 +78,6 @@ int16_t servo[MAX_SUPPORTED_SERVOS];
 static int useServo;
 STATIC_UNIT_TESTED uint8_t servoCount;
 static servoParam_t *servoConf;
-static lowpass_t lowpassFilters[MAX_SUPPORTED_SERVOS];
 #endif
 
 static const motorMixer_t mixerQuadX[] = {
@@ -748,11 +748,45 @@ STATIC_UNIT_TESTED void servoMixer(void)
 
 #endif
 
+void acroPlusApply(void) {
+    int axis;
+
+    for (axis = 0; axis < 2; axis++) {
+        int16_t factor;
+        q_number_t wowFactor;
+        int16_t rcCommandDeflection = constrain(rcCommand[axis], -500, 500); // Limit stick input to 500 (rcCommand 100)
+        int16_t acroPlusStickOffset = rxConfig->acroPlusOffset * 5;
+        int16_t motorRange = escAndServoConfig->maxthrottle - escAndServoConfig->minthrottle;
+        if (feature(FEATURE_3D)) motorRange = (motorRange - (flight3DConfig->deadband3d_high - flight3DConfig->deadband3d_low)) / 2;
+
+        /* acro plus factor handling */
+        if (rxConfig->acroPlusFactor && ABS(rcCommandDeflection) > acroPlusStickOffset + 10) {
+            if (rcCommandDeflection > 0) {
+                rcCommandDeflection -= acroPlusStickOffset;
+            } else {
+                rcCommandDeflection += acroPlusStickOffset;
+            }
+            qConstruct(&wowFactor,ABS(rcCommandDeflection) * rxConfig->acroPlusFactor / 100, 500, Q12_NUMBER);
+            factor = qMultiply(wowFactor, (rcCommandDeflection * motorRange) / 500);
+            wowFactor.num = wowFactor.den - wowFactor.num;
+        } else {
+            qConstruct(&wowFactor, 1, 1, Q12_NUMBER);
+            factor = 0;
+        }
+        axisPID[axis] = factor + qMultiply(wowFactor, axisPID[axis]);
+    }
+}
+
 void mixTable(void)
 {
     uint32_t i;
+    q_number_t vbatCompensationFactor;
 
     bool isFailsafeActive = failsafeIsActive(); // TODO - Find out if failsafe checks are really needed here in mixer code
+
+    if (IS_RC_MODE_ACTIVE(BOXACROPLUS)) {
+        acroPlusApply();
+    }
 
     if (motorCount >= 4 && mixerConfig->yaw_jump_prevention_limit < YAW_JUMP_PREVENTION_LIMIT_HIGH) {
         // prevent "yaw jump" during yaw correction
@@ -764,6 +798,8 @@ void mixTable(void)
     int16_t rollPitchYawMixMax = 0; // assumption: symetrical about zero.
     int16_t rollPitchYawMixMin = 0;
 
+    if (batteryConfig->vbatPidCompensation) vbatCompensationFactor = calculateVbatPidCompensation(); // Calculate voltage compensation
+
     // Find roll/pitch/yaw desired output
     for (i = 0; i < motorCount; i++) {
         rollPitchYawMix[i] =
@@ -771,7 +807,7 @@ void mixTable(void)
             axisPID[ROLL] * currentMixer[i].roll +
             -mixerConfig->yaw_motor_direction * axisPID[YAW] * currentMixer[i].yaw;
 
-        if (batteryConfig->vbatPidCompensation) rollPitchYawMix[i] *= calculateVbatPidCompensation();  // Add voltage PID compensation
+        if (batteryConfig->vbatPidCompensation) rollPitchYawMix[i] = qMultiply(vbatCompensationFactor, rollPitchYawMix[i]);  // Add voltage compensation
 
         if (rollPitchYawMix[i] > rollPitchYawMixMax) rollPitchYawMixMax = rollPitchYawMix[i];
         if (rollPitchYawMix[i] < rollPitchYawMixMin) rollPitchYawMixMin = rollPitchYawMix[i];
@@ -781,29 +817,26 @@ void mixTable(void)
     int16_t rollPitchYawMixRange = rollPitchYawMixMax - rollPitchYawMixMin;
     int16_t throttleRange, throttle;
     int16_t throttleMin, throttleMax;
+    static int16_t throttlePrevious = 0;   // Store the last throttle direction for deadband transitions
 
-    // Find min and max throttle based on condition
+    // Find min and max throttle based on condition. Use rcData for 3D to prevent loss of power due to min_check
     if (feature(FEATURE_3D)) {
-        static int16_t throttlePrevious = 0;   // Store the last throttle direction for deadband transitions
+        if (!ARMING_FLAG(ARMED)) throttlePrevious = rxConfig->midrc; // When disarmed set to mid_rc. It always results in positive direction after arming.
 
-        if (rcData[THROTTLE] <= (rxConfig->midrc - flight3DConfig->deadband3d_throttle)) { // Out of deadband handling
+        if ((rcData[THROTTLE] <= (rxConfig->midrc - flight3DConfig->deadband3d_throttle))) { // Out of band handling
             throttleMax = flight3DConfig->deadband3d_low;
             throttleMin = escAndServoConfig->minthrottle;
-            throttlePrevious = throttle = rcCommand[THROTTLE];
-        } else if (rcData[THROTTLE] >= (rxConfig->midrc + flight3DConfig->deadband3d_throttle)) {
+            throttlePrevious = throttle = rcData[THROTTLE];
+        } else if (rcData[THROTTLE] >= (rxConfig->midrc + flight3DConfig->deadband3d_throttle)) { // Positive handling
             throttleMax = escAndServoConfig->maxthrottle;
             throttleMin = flight3DConfig->deadband3d_high;
-            throttlePrevious = throttle = rcCommand[THROTTLE];
-        } else {  // Deadband handling
-            // Always start positive. When coming from positive keep positive throttle within deadband
-            if ((throttlePrevious >= (rxConfig->midrc + flight3DConfig->deadband3d_throttle)) || !throttlePrevious) {
-                throttleMax = escAndServoConfig->maxthrottle;
-                throttle = throttleMin = flight3DConfig->deadband3d_high;
-            // When coming from negative. Keep negative throttle within deadband
-            } else if (throttlePrevious <= (rxConfig->midrc - flight3DConfig->deadband3d_throttle)) {
-                throttle = throttleMax = flight3DConfig->deadband3d_low;
-                throttleMin = escAndServoConfig->minthrottle;
-            }
+            throttlePrevious = throttle = rcData[THROTTLE];
+        } else if ((throttlePrevious <= (rxConfig->midrc - flight3DConfig->deadband3d_throttle)))  { // Deadband handling from negative to positive
+            throttle = throttleMax = flight3DConfig->deadband3d_low;
+            throttleMin = escAndServoConfig->minthrottle;
+        } else {  // Deadband handling from positive to negative
+            throttleMax = escAndServoConfig->maxthrottle;
+            throttle = throttleMin = flight3DConfig->deadband3d_high;
         }
     } else {
         throttle = rcCommand[THROTTLE];
@@ -815,14 +848,17 @@ void mixTable(void)
 
     if (rollPitchYawMixRange > throttleRange) {
         motorLimitReached = true;
-        float mixReduction = (float) throttleRange / rollPitchYawMixRange;
+        q_number_t mixReduction;
+        qConstruct(&mixReduction, throttleRange, rollPitchYawMixRange, Q12_NUMBER);
+        //float mixReduction = (float) throttleRange / rollPitchYawMixRange;
         for (i = 0; i < motorCount; i++) {
-            rollPitchYawMix[i] =  lrintf((float) rollPitchYawMix[i] * mixReduction);
+            rollPitchYawMix[i] =  qMultiply(mixReduction,rollPitchYawMix[i]);
         }
         // Get the maximum correction by setting offset to center. Only active below 50% of saturation levels to reduce spazzing out in crashes
-        if ((mixReduction > (mixerConfig->airmode_saturation_limit / 100.0f)) && IS_RC_MODE_ACTIVE(BOXAIRMODE)) {
+        if ((qPercent(mixReduction) > mixerConfig->airmode_saturation_limit) && IS_RC_MODE_ACTIVE(BOXAIRMODE)) {
             throttleMin = throttleMax = throttleMin + (throttleRange / 2);
         }
+
     } else {
         motorLimitReached = false;
         throttleMin = throttleMin + (rollPitchYawMixRange / 2);
@@ -837,10 +873,10 @@ void mixTable(void)
         if (isFailsafeActive) {
             motor[i] = constrain(motor[i], escAndServoConfig->mincommand, escAndServoConfig->maxthrottle);
         } else if (feature(FEATURE_3D)) {
-            if (throttle >= (rxConfig->midrc + flight3DConfig->deadband3d_throttle))  {
-                motor[i] = constrain(motor[i], flight3DConfig->deadband3d_high, escAndServoConfig->maxthrottle);
-            } else {
+            if (throttlePrevious <= (rxConfig->midrc - flight3DConfig->deadband3d_throttle)) {
                 motor[i] = constrain(motor[i], escAndServoConfig->minthrottle, flight3DConfig->deadband3d_low);
+            } else {
+                motor[i] = constrain(motor[i], flight3DConfig->deadband3d_high, escAndServoConfig->maxthrottle);
             }
         } else {
             motor[i] = constrain(motor[i], escAndServoConfig->minthrottle, escAndServoConfig->maxthrottle);
@@ -925,6 +961,8 @@ void filterServos(void)
 {
 #ifdef USE_SERVOS
     int16_t servoIdx;
+    static bool servoFilterIsSet;
+    static biquad_t servoFilterState[MAX_SUPPORTED_SERVOS];
 
 #if defined(MIXER_DEBUG)
     uint32_t startTime = micros();
@@ -932,8 +970,12 @@ void filterServos(void)
 
     if (mixerConfig->servo_lowpass_enable) {
         for (servoIdx = 0; servoIdx < MAX_SUPPORTED_SERVOS; servoIdx++) {
-            servo[servoIdx] = (int16_t)lowpassFixed(&lowpassFilters[servoIdx], servo[servoIdx], mixerConfig->servo_lowpass_freq);
+            if (!servoFilterIsSet) {
+                BiQuadNewLpf(mixerConfig->servo_lowpass_freq, &servoFilterState[servoIdx], targetLooptime);
+                servoFilterIsSet = true;
+            }
 
+            servo[servoIdx] = lrintf(applyBiQuadFilter((float) servo[servoIdx], &servoFilterState[servoIdx]));
             // Sanity check
             servo[servoIdx] = constrain(servo[servoIdx], servoConf[servoIdx].min, servoConf[servoIdx].max);
         }

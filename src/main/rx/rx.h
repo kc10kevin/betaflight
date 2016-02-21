@@ -52,7 +52,8 @@ typedef enum {
     SERIALRX_XBUS_MODE_B = 5,
     SERIALRX_XBUS_MODE_B_RJ01 = 6,
     SERIALRX_IBUS = 7,
-    SERIALRX_PROVIDER_MAX = SERIALRX_IBUS
+    SERIALRX_JETIEXBUS = 8,
+    SERIALRX_PROVIDER_MAX = SERIALRX_JETIEXBUS
 } SerialRXType;
 
 #define SERIALRX_PROVIDER_COUNT (SERIALRX_PROVIDER_MAX + 1)
@@ -120,6 +121,9 @@ typedef struct rxConfig_s {
     uint16_t maxcheck;                      // maximum rc end
     uint8_t rcSmoothing;
     uint8_t fpvCamAngleDegrees;             // Camera angle to be scaled into rc commands
+    uint8_t max_aux_channel;
+    uint8_t acroPlusFactor;                 // Air mode acrobility factor
+    uint8_t acroPlusOffset;                 // Air mode stick offset
 
     uint16_t rx_min_usec;
     uint16_t rx_max_usec;

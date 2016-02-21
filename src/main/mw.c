@@ -78,7 +78,6 @@
 #include "flight/imu.h"
 #include "flight/altitudehold.h"
 #include "flight/failsafe.h"
-#include "flight/gtune.h"
 #include "flight/navigation.h"
 
 #include "config/runtime_config.h"
@@ -101,7 +100,8 @@ enum {
 /* IBat monitoring interval (in microseconds) - 6 default looptimes */
 #define IBATINTERVAL (6 * 3500)
 
-#define GYRO_WATCHDOG_DELAY 100 // Watchdog delay for gyro sync
+#define GYRO_WATCHDOG_DELAY 80 //  delay for gyro sync
+#define JITTER_BUFFER_TIME 20  // cycleTime jitter buffer time
 
 uint16_t cycleTime = 0;         // this is the number in micro second to achieve a full loop, it can differ a little and is taken into account in the PID loop
 
@@ -116,10 +116,10 @@ int16_t telemTemperature1;      // gyro sensor temperature
 static uint32_t disarmAt;     // Time of automatic disarm when "Don't spin the motors when armed" is enabled and auto_disarm_delay is nonzero
 
 extern uint32_t currentTime;
-extern uint8_t PIDweight[3];
+extern uint8_t dynP8[3], dynI8[3], dynD8[3], PIDweight[3];
 extern bool antiWindupProtection;
 
-
+uint16_t filteredCycleTime;
 static bool isRXDataNew;
 
 typedef void (*pidControllerFuncPtr)(pidProfile_t *pidProfile, controlRateConfig_t *controlRateConfig,
@@ -134,30 +134,6 @@ void applyAndSaveAccelerometerTrimsDelta(rollAndPitchTrims_t *rollAndPitchTrimsD
 
     saveConfigAndNotify();
 }
-
-#ifdef GTUNE
-
-void updateGtuneState(void)
-{
-    static bool GTuneWasUsed = false;
-
-    if (IS_RC_MODE_ACTIVE(BOXGTUNE)) {
-        if (!FLIGHT_MODE(GTUNE_MODE) && ARMING_FLAG(ARMED)) {
-            ENABLE_FLIGHT_MODE(GTUNE_MODE);
-            init_Gtune(&currentProfile->pidProfile);
-            GTuneWasUsed = true;
-        }
-        if (!FLIGHT_MODE(GTUNE_MODE) && !ARMING_FLAG(ARMED) && GTuneWasUsed) {
-            saveConfigAndNotify();
-            GTuneWasUsed = false;
-        }
-    } else {
-        if (FLIGHT_MODE(GTUNE_MODE) && ARMING_FLAG(ARMED)) {
-            DISABLE_FLIGHT_MODE(GTUNE_MODE);
-        }
-    }
-}
-#endif
 
 bool isCalibrating()
 {
@@ -177,22 +153,11 @@ void filterRc(void){
     static int16_t deltaRC[4] = { 0, 0, 0, 0 };
     static int16_t factor, rcInterpolationFactor;
     uint16_t rxRefreshRate;
-    static biquad_t filteredCycleTimeState;
-    static bool filterIsSet;
-    uint16_t filteredCycleTime;
 
     // Set RC refresh rate for sampling and channels to filter
     initRxRefreshRate(&rxRefreshRate);
 
-    /* Initialize cycletime filter */
-    if (!filterIsSet) {
-        BiQuadNewLpf(0.5f, &filteredCycleTimeState, targetLooptime);
-        filterIsSet = true;
-    }
-
-    filteredCycleTime = applyBiQuadFilter((float) cycleTime, &filteredCycleTimeState);
-
-    rcInterpolationFactor = rxRefreshRate / filteredCycleTime + 1;
+    rcInterpolationFactor = rxRefreshRate / targetLooptime + 1;
 
     if (isRXDataNew) {
         for (int channel=0; channel < 4; channel++) {
@@ -219,7 +184,7 @@ void filterRc(void){
 void scaleRcCommandToFpvCamAngle(void) {
     int16_t roll = rcCommand[ROLL];
     int16_t yaw = rcCommand[YAW];
-    rcCommand[ROLL] = constrain(cos(masterConfig.rxConfig.fpvCamAngleDegrees*RAD) * roll + sin(masterConfig.rxConfig.fpvCamAngleDegrees*RAD) * yaw, -500, 500);
+    rcCommand[ROLL] = constrain(cos(masterConfig.rxConfig.fpvCamAngleDegrees*RAD) * roll - sin(masterConfig.rxConfig.fpvCamAngleDegrees*RAD) * yaw, -500, 500);
     rcCommand[YAW] = constrain(cos(masterConfig.rxConfig.fpvCamAngleDegrees*RAD) * yaw + sin(masterConfig.rxConfig.fpvCamAngleDegrees*RAD) * roll, -500, 500);
 }
 
@@ -266,6 +231,10 @@ void annexCode(void)
             rcCommand[axis] = (lookupYawRC[tmp2] + (tmp - tmp2 * 100) * (lookupYawRC[tmp2 + 1] - lookupYawRC[tmp2]) / 100) * -masterConfig.yaw_control_direction;
             prop1 = 100 - (uint16_t)currentControlRateProfile->rates[axis] * ABS(tmp) / 500;
         }
+        // FIXME axis indexes into pids.  use something like lookupPidIndex(rc_alias_e alias) to reduce coupling.
+        dynP8[axis] = (uint16_t)currentProfile->pidProfile.P8[axis] * prop1 / 100;
+        dynI8[axis] = (uint16_t)currentProfile->pidProfile.I8[axis] * prop1 / 100;
+        dynD8[axis] = (uint16_t)currentProfile->pidProfile.D8[axis] * prop1 / 100;
 
         // non coupled PID reduction scaler used in PID controller 1 and PID controller 2. YAW TPA disabled. 100 means 100% of the pids
         if (axis == YAW) {
@@ -301,6 +270,7 @@ void annexCode(void)
     if (masterConfig.rxConfig.fpvCamAngleDegrees && !FLIGHT_MODE(HEADFREE_MODE)) {
         scaleRcCommandToFpvCamAngle();
     }
+
 
     if (ARMING_FLAG(ARMED)) {
         LED0_ON;
@@ -483,16 +453,22 @@ void processRx(void)
     /* In airmode Iterm should be prevented to grow when Low thottle and Roll + Pitch Centered.
      This is needed to prevent Iterm winding on the ground, but keep full stabilisation on 0 throttle while in air */
     if (throttleStatus == THROTTLE_LOW) {
-        if (IS_RC_MODE_ACTIVE(BOXAIRMODE)) {
+        if (IS_RC_MODE_ACTIVE(BOXAIRMODE) && !failsafeIsActive() && ARMING_FLAG(ARMED)) {
             if (rollPitchStatus == CENTERED) {
                 antiWindupProtection = true;
             } else {
                 antiWindupProtection = false;
             }
         } else {
-            pidResetErrorGyro();
+            if (IS_RC_MODE_ACTIVE(BOXAIRMODE)) {
+                pidResetErrorGyroState(RESET_ITERM);
+            } else {
+                pidResetErrorGyroState(RESET_ITERM_AND_REDUCE_PID);
+            }
+            pidResetErrorAngle();
         }
     } else {
+        pidResetErrorGyroState(RESET_DISABLE);
         antiWindupProtection = false;
     }
 
@@ -644,9 +620,6 @@ static bool haveProcessedAnnexCodeOnce = false;
 
 void taskMainPidLoop(void)
 {
-    cycleTime = getTaskDeltaTime(TASK_SELF);
-    dT = (float)targetLooptime * 0.000001f;
-
     imuUpdateGyroAndAttitude();
 
     annexCode();
@@ -659,10 +632,6 @@ void taskMainPidLoop(void)
         if (sensors(SENSOR_MAG)) {
             updateMagHold();
         }
-#endif
-
-#ifdef GTUNE
-        updateGtuneState();
 #endif
 
 #if defined(BARO) || defined(SONAR)
@@ -738,12 +707,21 @@ void taskMainPidLoop(void)
 
 // Function for loop trigger
 void taskMainPidLoopCheck(void) {
-    // getTaskDeltaTime() returns delta time freezed at the moment of entering the scheduler. currentTime is freezed at the very same point.
-    // To make busy-waiting timeout work we need to account for time spent within busy-waiting loop
-    uint32_t currentDeltaTime = getTaskDeltaTime(TASK_SELF);
+    static uint32_t previousTime;
+
+    cycleTime = micros() - previousTime;
+    previousTime = micros();
+
+    // Debugging parameters
+    debug[0] = cycleTime;
+    debug[1] = cycleTime - targetLooptime;
+    debug[2] = averageSystemLoadPercent;
 
     while (1) {
-        if (gyroSyncCheckUpdate() || ((currentDeltaTime + (micros() - currentTime)) >= (targetLooptime + GYRO_WATCHDOG_DELAY))) {
+        if (gyroSyncCheckUpdate() || ((cycleTime + (micros() - previousTime)) >= (targetLooptime + GYRO_WATCHDOG_DELAY))) {
+            while (1) {
+                if (micros() >= JITTER_BUFFER_TIME + previousTime) break;
+            }
             break;
         }
     }
