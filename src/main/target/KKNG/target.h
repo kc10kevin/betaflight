@@ -117,6 +117,7 @@
 #define USE_I2C
 #define I2C_DEVICE (I2CDEV_1) // SDA (PB9/AF4), SCL (PB8/AF4)
 
+/*
 #define I2C1_SCL_GPIO        GPIOB
 #define I2C1_SCL_GPIO_AF     GPIO_AF_4
 #define I2C1_SCL_PIN         GPIO_Pin_8
@@ -127,7 +128,7 @@
 #define I2C1_SDA_PIN         GPIO_Pin_9
 #define I2C1_SDA_PIN_SOURCE  GPIO_PinSource9
 #define I2C1_SDA_CLK_SOURCE  RCC_AHBPeriph_GPIOB
-
+*/
 #define USE_ADC
 #define BOARD_HAS_VOLTAGE_DIVIDER
 
