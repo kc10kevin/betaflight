@@ -103,28 +103,30 @@
 #define VBAT_ADC_GPIO_PIN           GPIO_Pin_0
 #define VBAT_ADC_CHANNEL            ADC_Channel_1
 
-#define CURRENT_METER_ADC_GPIO      GPIOB
-#define CURRENT_METER_ADC_GPIO_PIN  GPIO_Pin_1
-#define CURRENT_METER_ADC_CHANNEL   ADC_Channel_9
+//#define CURRENT_METER_ADC_GPIO      GPIOB
+//#define CURRENT_METER_ADC_GPIO_PIN  GPIO_Pin_1
+//#define CURRENT_METER_ADC_CHANNEL   ADC_Channel_9
 
-#define RSSI_ADC_GPIO               GPIOB
-#define RSSI_ADC_GPIO_PIN           GPIO_Pin_0
-#define RSSI_ADC_CHANNEL            ADC_Channel_8
+#define RSSI_ADC_GPIO               GPIOA
+#define RSSI_ADC_GPIO_PIN           GPIO_Pin_1
+#define RSSI_ADC_CHANNEL            ADC_Channel_2
 
-//define LED_STRIP
+#define LED_STRIP
 
-//define LED_STRIP_TIMER TIM16
+#define LED_STRIP_TIMER TIM16
 
-//define USE_LED_STRIP_ON_DMA1_CHANNEL3
-//define WS2811_GPIO                     GPIOA
-//define WS2811_GPIO_AHB_PERIPHERAL      RCC_AHBPeriph_GPIOA
-//define WS2811_GPIO_AF                  GPIO_AF_1
-//define WS2811_PIN                      GPIO_Pin_6 // TIM16_CH1
-//define WS2811_PIN_SOURCE               GPIO_PinSource6
-//define WS2811_TIMER                    TIM16
-//define WS2811_TIMER_APB2_PERIPHERAL    RCC_APB2Periph_TIM16
-//define WS2811_DMA_CHANNEL              DMA1_Channel3
-//define WS2811_IRQ                      DMA1_Channel3_IRQn
+#define USE_LED_STRIP_ON_DMA1_CHANNEL3
+#define WS2811_GPIO                     GPIOB
+#define WS2811_GPIO_AHB_PERIPHERAL      RCC_AHBPeriph_GPIOB
+#define WS2811_GPIO_AF                  GPIO_AF_1
+#define WS2811_PIN                      GPIO_Pin_4 // TIM16_CH1
+#define WS2811_PIN_SOURCE               GPIO_PinSource4
+#define WS2811_TIMER                    TIM16
+#define WS2811_TIMER_APB2_PERIPHERAL    RCC_APB2Periph_TIM16
+#define WS2811_DMA_CHANNEL              DMA1_Channel3
+#define WS2811_IRQ                      DMA1_Channel3_IRQn
+#define WS2811_DMA_TC_FLAG              DMA1_FLAG_TC3
+#define WS2811_DMA_HANDLER_IDENTIFER    DMA1_CH3_HANDLER
 
 #define BLACKBOX
 #define TELEMETRY

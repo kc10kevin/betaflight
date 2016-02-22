@@ -170,7 +170,7 @@ const extiConfig_t *selectMPUIntExtiConfig(void)
 #endif
 
 #if defined(CC3DF3)
-    static const extiConfig_t CC3DMPU6000Config = {
+    static const extiConfig_t CC3DF3MPU6000Config = {
             .gpioAHBPeripherals = RCC_AHBPeriph_GPIOA,
             .gpioPort = GPIOA,
             .gpioPin = Pin_3,
@@ -179,7 +179,7 @@ const extiConfig_t *selectMPUIntExtiConfig(void)
             .exti_line = EXTI_Line3,
             .exti_irqn = EXTI3_IRQn
     };
-    return &CC3DMPU6000Config;
+    return &CC3DF3MPU6000Config;
 #endif
 
 #ifdef ALIENFLIGHTF3

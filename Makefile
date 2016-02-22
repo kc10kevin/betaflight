@@ -754,10 +754,12 @@ CC3DF3_SRC        = \
 		   drivers/barometer_ms5611.c \
 		   drivers/barometer_bmp085.c \
 		   drivers/barometer_bmp280.c \
-           drivers/serial_usb_vcp.c \
-           drivers/serial_softserial.c \
-           drivers/sonar_hcsr04.c \
-           drivers/display_ug2864hsweg01.h \
+		   drivers/serial_usb_vcp.c \
+		   drivers/serial_softserial.c \
+		   drivers/sonar_hcsr04.c \
+		   drivers/light_ws2811strip.c \
+		   drivers/light_ws2811strip_stm32f30x.c \
+		   drivers/display_ug2864hsweg01.h \
 		   drivers/flash_m25p16.c \
 		   io/flashfs.c \
 		   $(HIGHEND_SRC) \

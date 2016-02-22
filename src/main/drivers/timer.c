@@ -345,19 +345,20 @@ const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
 #ifdef CC3DF3
 const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
 	
-    { TIM8,  GPIOB, Pin_6,  TIM_Channel_1, TIM8_CC_IRQn,            0, Mode_AF_PP,      GPIO_PinSource6,  GPIO_AF_5}, // S1_IN
+    { TIM8,  GPIOB, Pin_6,  TIM_Channel_1, TIM8_CC_IRQn,            0, Mode_AF_PP,      GPIO_PinSource6,  GPIO_AF_5}, // S1_IN - PPM IN
     { TIM3,  GPIOB, Pin_5,  TIM_Channel_2, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_2}, // S2_IN - SoftSerial TX / Sonar trigger
     { TIM3,  GPIOB, Pin_0,  TIM_Channel_3, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_2}, // S3_IN - SoftSerial RX / Sonar echo / RSSI ADC
-    { TIM3,  GPIOB, Pin_1,  TIM_Channel_4, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_2}, // S4_IN - Current
+//    { TIM3,  GPIOB, Pin_1,  TIM_Channel_4, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_2}, // S4_IN - Current
+    { TIM8,  GPIOB, Pin_1,  TIM_Channel_3, TIM8_CC_IRQn,            0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_4}, // S4_IN - Current
     { TIM2,  GPIOA, Pin_0,  TIM_Channel_1, TIM2_IRQn,               0, Mode_AF_PP,      GPIO_PinSource0,  GPIO_AF_1}, // S5_IN - Vbattery
-    { TIM2,  GPIOA, Pin_1,  TIM_Channel_2, TIM2_IRQn,               0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_1}, // S6_IN - PPM IN   
+    { TIM2,  GPIOA, Pin_1,  TIM_Channel_2, TIM2_IRQn,               0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_1}, // S6_IN - RSSI  
 
     { TIM4,  GPIOB, Pin_9,  TIM_Channel_4, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource9,  GPIO_AF_2}, // ??time17ch1 tim8 ch3??? S1 - PB9 - TIM4_CH4 - AF02
     { TIM4,  GPIOB, Pin_8,  TIM_Channel_3, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource8,  GPIO_AF_2}, // ??time16ch1 tim8 ch2???S2 - PB8 - TIM4_CH3 - AF02
     { TIM4,  GPIOB, Pin_7,  TIM_Channel_2, TIM4_IRQn,               1, Mode_AF_PP,      GPIO_PinSource7,  GPIO_AF_2}, // S3 - PB7 - TIM4_CH2 - AF02
     { TIM1,  GPIOA, Pin_8,  TIM_Channel_1, TIM1_CC_IRQn,            1, Mode_AF_PP,      GPIO_PinSource8,  GPIO_AF_6}, // PWM8  - PA8  - *TIM1_CH1, TIM4_ETR
-    { TIM16, GPIOB, Pin_4,  TIM_Channel_1, TIM1_UP_TIM16_IRQn,      1, Mode_AF_PP,      GPIO_PinSource4,  GPIO_AF_1}, // ??time16ch1??S5 - PB4 - TIM3_CH1 - AF02
-    { TIM2,  GPIOA, Pin_2,  TIM_Channel_3, TIM2_IRQn,               1, Mode_AF_PP,      GPIO_PinSource2,  GPIO_AF_1},  // S6 - PA2 - TIM2_CH3 - AF01
+    { TIM16, GPIOB, Pin_4,  TIM_Channel_1, TIM1_UP_TIM16_IRQn,      1, Mode_AF_PP,      GPIO_PinSource4,  GPIO_AF_1}, // S5 - LED Strip
+    { TIM2,  GPIOA, Pin_2,  TIM_Channel_3, TIM2_IRQn,               1, Mode_AF_PP,      GPIO_PinSource2,  GPIO_AF_1}, // S6 - PA2 - TIM2_CH3 - AF01
 
 /* KBCC3DF3 Timers?
 
