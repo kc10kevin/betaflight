@@ -377,7 +377,7 @@ static void resetConf(void)
     masterConfig.version = EEPROM_CONF_VERSION;
     masterConfig.mixerMode = MIXER_QUADX;
     featureClearAll();
-#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE)
+#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(CC3DF3)
     featureSet(FEATURE_RX_PPM);
 #endif
 
@@ -470,7 +470,7 @@ static void resetConf(void)
 #endif
     masterConfig.servo_pwm_rate = 50;
     masterConfig.use_fast_pwm = 0;
-#ifdef CC3D
+#if defined(CC3D) || defined(CC3DF3)
     masterConfig.use_buzzer_p6 = 0;
 #endif
 
@@ -547,7 +547,7 @@ static void resetConf(void)
     applyDefaultLedStripConfig(masterConfig.ledConfigs);
 #endif
 
-#ifdef SPRACINGF3
+#if defined(SPRACINGF3) || defined(CC3DF3)
     featureSet(FEATURE_BLACKBOX);
     masterConfig.blackbox_device = 1;
 #ifdef TRANSPONDER
@@ -843,6 +843,12 @@ void validateAndFixConfig(void)
     }
 #endif
 
+#if defined(CC3DF3) && defined(DISPLAY) && defined(USE_USART3)
+    if (doesConfigurationUsePort(SERIAL_PORT_USART3) && feature(FEATURE_DISPLAY)) {
+        featureClear(FEATURE_DISPLAY);
+    }
+#endif
+
 #ifdef STM32F303xC
     // hardware supports serial port inversion, make users life easier for those that want to connect SBus RX's
     masterConfig.telemetryConfig.telemetry_inversion = 1;
@@ -864,6 +870,15 @@ void validateAndFixConfig(void)
     	featureClear(FEATURE_RSSI_ADC);
     }
 #endif
+
+//#if defined(CC3DF3) && defined(SONAR) && defined(USE_SOFTSERIAL1) && defined(RSSI_ADC_GPIO)
+//    // shared pin
+//    if ((featureConfigured(FEATURE_SONAR) + featureConfigured(FEATURE_SOFTSERIAL) + featureConfigured(FEATURE_RSSI_ADC)) > 1) {
+//    	featureClear(FEATURE_SONAR);
+//    	featureClear(FEATURE_SOFTSERIAL);
+//    	featureClear(FEATURE_RSSI_ADC);
+//    }
+//#endif
 
 #if defined(COLIBRI_RACE)
     masterConfig.serialConfig.portConfigs[0].functionMask = FUNCTION_MSP;

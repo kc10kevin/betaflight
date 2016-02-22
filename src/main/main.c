@@ -315,7 +315,7 @@ void init(void)
         pwm_params.idlePulse = masterConfig.flight3DConfig.neutral3d;
     if (pwm_params.motorPwmRate > 500 && !masterConfig.use_fast_pwm)
         pwm_params.idlePulse = 0; // brushed motors
-#ifdef CC3D
+#if defined(CC3D) || defined (CC3DF3)
     pwm_params.useBuzzerP6 = masterConfig.use_buzzer_p6 ? true : false;
 #endif
     pwmRxInit(masterConfig.inputFilteringMode);
@@ -353,7 +353,7 @@ void init(void)
         beeperConfig.isInverted = true;
     }
 #endif
-#ifdef CC3D
+#if defined(CC3D) || defined (CC3DF3)
     if (masterConfig.use_buzzer_p6 == 1)
         beeperConfig.gpioPin = Pin_2;
 #endif
@@ -409,6 +409,11 @@ void init(void)
     }
 #endif
 
+#if defined(CC3DF3) && defined(SONAR) && defined(USE_SOFTSERIAL1)
+    if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
+        serialRemovePort(SERIAL_PORT_SOFTSERIAL1);
+    }
+#endif
 
 #ifdef USE_I2C
 #if defined(NAZE)
@@ -419,7 +424,7 @@ void init(void)
             i2cInit(I2C_DEVICE);
         }
     }
-#elif defined(CC3D)
+#elif defined(CC3D) || defined (CC3DF3)
     if (!doesConfigurationUsePort(SERIAL_PORT_USART3)) {
         i2cInit(I2C_DEVICE);
     }

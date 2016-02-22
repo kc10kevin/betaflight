@@ -45,33 +45,8 @@
 #define ACC_MPU6000_ALIGN CW270_DEG
 
 #define USE_SPI
-
 #define USE_SPI_DEVICE_1
-#define SPI1_GPIO               GPIOA
-#define SPI1_GPIO_PERIPHERAL    RCC_AHBPeriph_GPIOA
-#define SPI1_NSS_PIN            Pin_4
-#define SPI1_NSS_PIN_SOURCE     GPIO_PinSource4
-#define SPI1_SCK_PIN            GPIO_Pin_5
-#define SPI1_SCK_PIN_SOURCE     GPIO_PinSource5
-#define SPI1_MISO_PIN           GPIO_Pin_6
-#define SPI1_MISO_PIN_SOURCE    GPIO_PinSource6
-#define SPI1_MOSI_PIN           GPIO_Pin_7
-#define SPI1_MOSI_PIN_SOURCE    GPIO_PinSource7
-
 #define USE_SPI_DEVICE_2 // PB12,13,14,15 on AF5
-
-/* NOT NEEDED
-#define SPI2_GPIO               GPIOB
-#define SPI2_GPIO_PERIPHERAL    RCC_AHBPeriph_GPIOB
-#define SPI2_NSS_PIN            Pin_12
-#define SPI2_NSS_PIN_SOURCE     GPIO_PinSource12
-#define SPI2_SCK_PIN            Pin_13
-#define SPI2_SCK_PIN_SOURCE     GPIO_PinSource13
-#define SPI2_MISO_PIN           Pin_14
-#define SPI2_MISO_PIN_SOURCE    GPIO_PinSource14
-#define SPI2_MOSI_PIN           Pin_15
-#define SPI2_MOSI_PIN_SOURCE    GPIO_PinSource15
-*/
 
 #define M25P16_CS_GPIO          GPIOB
 #define M25P16_CS_PIN           GPIO_Pin_12
@@ -80,23 +55,33 @@
 #define USE_FLASHFS
 #define USE_FLASH_M25P16
 
-#define USABLE_TIMER_CHANNEL_COUNT 7
+#define USABLE_TIMER_CHANNEL_COUNT 12
+
+#define BARO
+#define USE_BARO_MS5611
+#define USE_BARO_BMP085
+#define USE_BARO_BMP280
 
 #define USB_IO
 
 #define USE_VCP
 #define USE_USART1
 #define USE_USART3
-#define SERIAL_PORT_COUNT 3
+#define USE_SOFTSERIAL1
+#define SERIAL_PORT_COUNT 4
 
-#ifndef UART1_GPIO
+#define SOFTSERIAL_1_TIMER TIM3
+#define SOFTSERIAL_1_TIMER_TX_HARDWARE 1 // PWM 2
+#define SOFTSERIAL_1_TIMER_RX_HARDWARE 2 // PWM 3
+
+//#ifndef UART1_GPIO
 #define UART1_TX_PIN        GPIO_Pin_9  // PA9
 #define UART1_RX_PIN        GPIO_Pin_10 // PA10
 #define UART1_GPIO          GPIOA
 #define UART1_GPIO_AF       GPIO_AF_7
 #define UART1_TX_PINSOURCE  GPIO_PinSource9
 #define UART1_RX_PINSOURCE  GPIO_PinSource10
-#endif
+//#endif
 
 #define UART3_TX_PIN        GPIO_Pin_10 // PB10
 #define UART3_RX_PIN        GPIO_Pin_11 // PB11
@@ -116,7 +101,7 @@
 
 #define VBAT_ADC_GPIO               GPIOA
 #define VBAT_ADC_GPIO_PIN           GPIO_Pin_0
-#define VBAT_ADC_CHANNEL            ADC_Channel_0
+#define VBAT_ADC_CHANNEL            ADC_Channel_1
 
 #define CURRENT_METER_ADC_GPIO      GPIOB
 #define CURRENT_METER_ADC_GPIO_PIN  GPIO_Pin_1
@@ -126,7 +111,6 @@
 #define RSSI_ADC_GPIO_PIN           GPIO_Pin_0
 #define RSSI_ADC_CHANNEL            ADC_Channel_8
 
-//define GPS
 //define LED_STRIP
 
 //define LED_STRIP_TIMER TIM16
@@ -143,8 +127,25 @@
 //define WS2811_IRQ                      DMA1_Channel3_IRQn
 
 #define BLACKBOX
-//define TELEMETRY
+#define TELEMETRY
 #define SERIAL_RX
-#define GTUNE
+#define SONAR
+#define GPS
 #define USE_SERVOS
 #define USE_CLI
+
+#define USE_SERIAL_1WIRE
+
+// FlexPort (pin 21/22, TX/RX respectively):
+// Note, FlexPort has 10k pullups on both TX and RX
+// JST Pin3 TX - connect to external UART/USB RX
+#define S1W_TX_GPIO         GPIOB
+#define S1W_TX_PIN          GPIO_Pin_10
+// JST Pin4 RX - connect to external UART/USB TX
+#define S1W_RX_GPIO         GPIOB
+#define S1W_RX_PIN          GPIO_Pin_11
+
+#define SPEKTRUM_BIND
+// USART3, PB11 (Flexport)
+#define BIND_PORT  GPIOB
+#define BIND_PIN   Pin_11

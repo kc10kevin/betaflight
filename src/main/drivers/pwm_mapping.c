@@ -144,7 +144,7 @@ static const uint16_t airPWM[] = {
 };
 #endif
 
-#ifdef CC3D
+#if defined(CC3D) || defined (CC3DF3)
 static const uint16_t multiPPM[] = {
     PWM6  | (MAP_TO_PPM_INPUT << 8),     // PPM input
     PWM7  | (MAP_TO_MOTOR_OUTPUT << 8),      // motor #1
@@ -568,8 +568,42 @@ static const uint16_t * const hardwareMaps[] = {
     airPWM,
     airPPM,
 };
+/*
+#ifdef CC3DF3
+static const uint16_t multiPPM[] = {
+    PWM7  | (MAP_TO_PPM_INPUT << 8), // PPM input
 
-#ifdef CC3D
+    PWM1  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM2  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM3  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM4  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM5  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM6  | (MAP_TO_MOTOR_OUTPUT << 8),
+    0xFFFF
+};
+
+static const uint16_t multiPWM[] = {
+    PWM1  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM2  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM3  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM4  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM5  | (MAP_TO_MOTOR_OUTPUT << 8),
+    PWM6  | (MAP_TO_MOTOR_OUTPUT << 8),
+    0xFFFF
+};
+
+static const uint16_t airPPM[] = {
+    // TODO
+    0xFFFF
+};
+
+static const uint16_t airPWM[] = {
+    // TODO
+    0xFFFF
+};
+#endif
+*/
+#if defined(CC3D) || defined (CC3DF3)
 static const uint16_t * const hardwareMapsBP6[] = {
     multiPWM_BP6,
     multiPPM_BP6,
@@ -599,7 +633,7 @@ pwmOutputConfiguration_t *pwmInit(drv_pwm_config_t *init)
     if (init->usePPM || init->useSerialRx)
         i++; // next index is for PPM
 
-#ifdef CC3D
+#if defined(CC3D) || defined (CC3DF3)
 if (init->useBuzzerP6) {
 	setup = hardwareMapsBP6[i];
 } else {
@@ -705,7 +739,7 @@ if (init->useBuzzerP6) {
                 type = MAP_TO_SERVO_OUTPUT;
 #endif
 
-#if defined(CC3D)
+#if defined(CC3D) || defined (CC3DF3)
             // remap PWM9+10 as servos
             if ((timerIndex == PWM9 || timerIndex == PWM10) && timerHardwarePtr->tim == TIM1)
                 type = MAP_TO_SERVO_OUTPUT;
@@ -766,7 +800,7 @@ if (init->useBuzzerP6) {
 
 #endif // USE_SERVOS
 
-#ifdef CC3D
+#if defined(CC3D) || defined (CC3DF3)
         if (init->useParallelPWM) {
             // Skip PWM inputs that conflict with timers used outputs.
             if ((type == MAP_TO_SERVO_OUTPUT || type == MAP_TO_MOTOR_OUTPUT) && (timerHardwarePtr->tim == TIM2 || timerHardwarePtr->tim == TIM3)) {
@@ -796,7 +830,7 @@ if (init->useBuzzerP6) {
             channelIndex++;
         } else if (type == MAP_TO_MOTOR_OUTPUT) {
 
-#ifdef CC3D
+#if defined(CC3D) || defined (CC3DF3)
             if (init->useOneshot || isMotorBrushed(init->motorPwmRate)){
             	// Skip it if it would cause PPM capture timer to be reconfigured or manually overflowed
             	if (timerHardwarePtr->tim == TIM2)
