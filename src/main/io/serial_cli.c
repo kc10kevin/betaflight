@@ -575,6 +575,7 @@ const clivalue_t valueTable[] = {
     { "frsky_coordinates_format",   VAR_UINT8  | MASTER_VALUE,  &masterConfig.telemetryConfig.frsky_coordinate_format, .config.minmax = { 0,  FRSKY_FORMAT_NMEA } },
     { "frsky_unit",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.telemetryConfig.frsky_unit, .config.lookup = { TABLE_UNIT } },
     { "frsky_vfas_precision",       VAR_UINT8  | MASTER_VALUE,  &masterConfig.telemetryConfig.frsky_vfas_precision, .config.minmax = { FRSKY_VFAS_PRECISION_LOW,  FRSKY_VFAS_PRECISION_HIGH } },
+    { "frsky_vfas_cell_voltage",    VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.telemetryConfig.frsky_vfas_cell_voltage, .config.lookup = { TABLE_OFF_ON } },
     { "hott_alarm_sound_interval",  VAR_UINT8  | MASTER_VALUE,  &masterConfig.telemetryConfig.hottAlarmSoundInterval, .config.minmax = { 0,  120 } },
 
     { "battery_capacity",           VAR_UINT16 | MASTER_VALUE,  &masterConfig.batteryConfig.batteryCapacity, .config.minmax = { 0,  20000 } },
@@ -671,6 +672,7 @@ const clivalue_t valueTable[] = {
     { "pid_delta_method",           VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, &masterConfig.profile[0].pidProfile.deltaMethod, .config.lookup = { TABLE_DELTA_METHOD } },
     { "dterm_lpf_hz",               VAR_FLOAT  | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.dterm_lpf_hz, .config.minmax = {0, 500 } },
     { "dterm_average_count",        VAR_UINT8  | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.dterm_average_count, .config.minmax = {2, 12 } },
+    { "pid_jitter_buffer",          VAR_UINT8  | MASTER_VALUE,  &masterConfig.pid_jitter_buffer, .config.minmax = { 0,  100 } },
 
     { "pid_controller",             VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, &masterConfig.profile[0].pidProfile.pidController, .config.lookup = { TABLE_PID_CONTROLLER } },
 
@@ -1837,15 +1839,21 @@ static void cliDump(char *cmdline)
         printSectionBreak();
 
         dumpValues(PROFILE_VALUE);
+
+        cliPrint("\r\n# rateprofile\r\n");		
+        cliRateProfile("");		
+
+        printSectionBreak();		
+
         dumpValues(PROFILE_RATE_VALUE);
     }
     if (dumpMask & DUMP_RATES) {		
-		cliPrint("\r\n# dump rates\r\n");		
- 
-		cliPrint("\r\n# rateprofile\r\n");		
-		cliRateProfile("");		
- 
-		printSectionBreak();		
+        cliPrint("\r\n# dump rates\r\n");		
+
+        cliPrint("\r\n# rateprofile\r\n");		
+        cliRateProfile("");		
+
+        printSectionBreak();		
  
         dumpValues(PROFILE_RATE_VALUE);
  }
