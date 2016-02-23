@@ -134,7 +134,7 @@ static uint32_t activeFeaturesLatch = 0;
 static uint8_t currentControlRateProfileIndex = 0;
 controlRateConfig_t *currentControlRateProfile;
 
-static const uint8_t EEPROM_CONF_VERSION = 125;
+static const uint8_t EEPROM_CONF_VERSION = 126;
 
 static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
 {
@@ -249,6 +249,7 @@ void resetTelemetryConfig(telemetryConfig_t *telemetryConfig)
     telemetryConfig->frsky_coordinate_format = FRSKY_FORMAT_DMS;
     telemetryConfig->frsky_unit = FRSKY_UNIT_METRICS;
     telemetryConfig->frsky_vfas_precision = 0;
+    telemetryConfig->frsky_vfas_cell_voltage = 0;
     telemetryConfig->hottAlarmSoundInterval = 5;
 }
 
@@ -401,6 +402,8 @@ static void resetConf(void)
     masterConfig.gyro_lpf = 1;                 // 188HZ
     masterConfig.gyro_sync_denom = 4;
     masterConfig.gyro_soft_lpf_hz = 60;
+
+    masterConfig.pid_jitter_buffer = 20;
 
     resetAccelerometerTrims(&masterConfig.accZero);
 
