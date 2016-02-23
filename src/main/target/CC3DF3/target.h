@@ -57,11 +57,6 @@
 
 #define USABLE_TIMER_CHANNEL_COUNT 12
 
-#define BARO
-#define USE_BARO_MS5611
-#define USE_BARO_BMP085
-#define USE_BARO_BMP280
-
 #define USB_IO
 
 #define USE_VCP
@@ -90,8 +85,8 @@
 #define UART3_TX_PINSOURCE  GPIO_PinSource10
 #define UART3_RX_PINSOURCE  GPIO_PinSource11
 
-#define USE_I2C
-#define I2C_DEVICE (I2CDEV_2)  // Flex port - SCL/PB10, SDA/PB11
+//#define USE_I2C
+//#define I2C_DEVICE (I2CDEV_2)  // SCL/PB10, SDA/PB11 - no I2C on PB10/PB11 on the STM32F303
 
 #define USE_ADC
 
