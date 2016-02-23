@@ -378,7 +378,7 @@ static void resetConf(void)
     masterConfig.version = EEPROM_CONF_VERSION;
     masterConfig.mixerMode = MIXER_QUADX;
     featureClearAll();
-#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE)
+#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(KBCC3DF3)
     featureSet(FEATURE_RX_PPM);
 #endif
 
@@ -550,7 +550,7 @@ static void resetConf(void)
     applyDefaultLedStripConfig(masterConfig.ledConfigs);
 #endif
 
-#ifdef SPRACINGF3
+#if defined(SPRACINGF3) || defined(KBCC3DF3)
     featureSet(FEATURE_BLACKBOX);
     masterConfig.blackbox_device = 1;
 #ifdef TRANSPONDER
@@ -841,6 +841,12 @@ void validateAndFixConfig(void)
 #endif
 
 #if defined(CC3D) && defined(DISPLAY) && defined(USE_USART3)
+    if (doesConfigurationUsePort(SERIAL_PORT_USART3) && feature(FEATURE_DISPLAY)) {
+        featureClear(FEATURE_DISPLAY);
+    }
+#endif
+
+#if defined(KBCC3DF3) && defined(DISPLAY) && defined(USE_USART3)
     if (doesConfigurationUsePort(SERIAL_PORT_USART3) && feature(FEATURE_DISPLAY)) {
         featureClear(FEATURE_DISPLAY);
     }

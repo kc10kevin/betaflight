@@ -403,7 +403,7 @@ void init(void)
     }
 #endif
 
-#if defined(SPRACINGF3MINI) && defined(SONAR) && defined(USE_SOFTSERIAL1)
+#if (defined(SPRACINGF3MINI) || defined(KBCC3DF3)) && defined(SONAR) && defined(USE_SOFTSERIAL1)
     if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
         serialRemovePort(SERIAL_PORT_SOFTSERIAL1);
     }
@@ -419,7 +419,7 @@ void init(void)
             i2cInit(I2C_DEVICE);
         }
     }
-#elif defined(CC3D)
+#elif defined(CC3D) || defined(KBCC3DF3)
     if (!doesConfigurationUsePort(SERIAL_PORT_USART3)) {
         i2cInit(I2C_DEVICE);
     }

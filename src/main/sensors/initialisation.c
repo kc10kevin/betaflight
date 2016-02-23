@@ -143,6 +143,19 @@ const extiConfig_t *selectMPUIntExtiConfig(void)
     return &cc3dMPUIntExtiConfig;
 #endif
 
+#if defined(KBCC3DF3)
+    static const extiConfig_t CC3DF3MPU6000Config = {
+            .gpioAHBPeripherals = RCC_AHBPeriph_GPIOA,
+            .gpioPort = GPIOA,
+            .gpioPin = Pin_3,
+            .exti_port_source = EXTI_PortSourceGPIOA,
+            .exti_pin_source = EXTI_PinSource3,
+            .exti_line = EXTI_Line3,
+            .exti_irqn = EXTI3_IRQn
+    };
+    return &CC3DF3MPU6000Config;
+#endif
+
 #if defined(COLIBRI_RACE) || defined(LUX_RACE)
     static const extiConfig_t RaceMPUIntExtiConfig = {
          .gpioAHBPeripherals = RCC_AHBPeriph_GPIOA,
