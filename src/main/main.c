@@ -424,7 +424,7 @@ void init(void)
             i2cInit(I2C_DEVICE);
         }
     }
-#elif defined(CC3D) || defined (CC3DF3)
+#elif defined(CC3D) //|| defined (CC3DF3)
     if (!doesConfigurationUsePort(SERIAL_PORT_USART3)) {
         i2cInit(I2C_DEVICE);
     }
