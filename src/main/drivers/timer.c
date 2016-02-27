@@ -347,7 +347,7 @@ const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
 	
     { TIM8,  GPIOB, Pin_6,  TIM_Channel_1, TIM8_CC_IRQn,            0, Mode_AF_PP,      GPIO_PinSource6,  GPIO_AF_5}, // S1_IN - PPM IN
     { TIM3,  GPIOB, Pin_5,  TIM_Channel_2, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_2}, // S2_IN - SoftSerial TX / Sonar trigger
-    { TIM3,  GPIOB, Pin_0,  TIM_Channel_3, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource5,  GPIO_AF_2}, // S3_IN - SoftSerial RX / Sonar echo / RSSI ADC
+    { TIM3,  GPIOB, Pin_0,  TIM_Channel_3, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource0,  GPIO_AF_2}, // S3_IN - SoftSerial RX / Sonar echo / RSSI ADC
 //    { TIM3,  GPIOB, Pin_1,  TIM_Channel_4, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_2}, // S4_IN - Current
 //    { TIM8,  GPIOB, Pin_1,  TIM_Channel_3, TIM8_CC_IRQn,            0, Mode_AF_PP,      GPIO_PinSource1,  GPIO_AF_4}, // S4_IN - Current
 //    { TIM2,  GPIOA, Pin_0,  TIM_Channel_1, TIM2_IRQn,               0, Mode_AF_PP,      GPIO_PinSource0,  GPIO_AF_1}, // S5_IN - Vbattery
