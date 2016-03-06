@@ -106,14 +106,39 @@ void setGyroSamplingSpeed(uint16_t looptime) {
     uint16_t gyroSampleRate = 1000;
     uint8_t maxDivider = 1;
 
-    if (looptime != targetLooptime) {
+    if (looptime != targetLooptime || looptime == 0) {
+        if (looptime == 0) looptime = targetLooptime; // needed for pid controller changes
 #ifdef STM32F303xC
         if (looptime < 1000) {
             masterConfig.gyro_lpf = 0;
             gyroSampleRate = 125;
             maxDivider = 8;
+            masterConfig.pid_process_denom = 1;
+            masterConfig.acc_hardware = 0;
+            masterConfig.baro_hardware = 0;
+            masterConfig.mag_hardware = 0;
+            if (looptime < 250) {
+                masterConfig.acc_hardware = 1;
+                masterConfig.baro_hardware = 1;
+                masterConfig.mag_hardware = 1;
+                masterConfig.pid_process_denom = 2;
+            } else if (looptime < 375) {
+#if defined(LUX_RACE) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(ALIENFLIGHTF3) || defined(KKNG)
+                masterConfig.acc_hardware = 0;
+#else
+                masterConfig.acc_hardware = 1;
+#endif
+                masterConfig.baro_hardware = 1;
+                masterConfig.mag_hardware = 1;
+                masterConfig.pid_process_denom = 2;
+            }
+            masterConfig.gyro_sync_denom = constrain(looptime / gyroSampleRate, 1, maxDivider);
         } else {
-            masterConfig.gyro_lpf = 1;
+            masterConfig.gyro_lpf = 0;
+            masterConfig.gyro_sync_denom = 8;
+            masterConfig.acc_hardware = 0;
+            masterConfig.baro_hardware = 0;
+            masterConfig.mag_hardware = 0;
         }
 #else
         if (looptime < 1000) {
@@ -123,14 +148,30 @@ void setGyroSamplingSpeed(uint16_t looptime) {
             masterConfig.mag_hardware = 1;
             gyroSampleRate = 125;
             maxDivider = 8;
+            masterConfig.pid_process_denom = 1;
+            if (currentProfile->pidProfile.pidController == 2) masterConfig.pid_process_denom = 2;
+            if (looptime < 250) {
+                masterConfig.pid_process_denom = 3;
+            } else if (looptime < 375) {
+                if (currentProfile->pidProfile.pidController == 2) {
+                    masterConfig.pid_process_denom = 3;
+                } else {
+                    masterConfig.pid_process_denom = 2;
+                }
+            }
+            masterConfig.gyro_sync_denom = constrain(looptime / gyroSampleRate, 1, maxDivider);
         } else {
-            masterConfig.gyro_lpf = 1;
+            masterConfig.gyro_lpf = 0;
+
+            masterConfig.gyro_sync_denom = 8;
             masterConfig.acc_hardware = 0;
             masterConfig.baro_hardware = 0;
             masterConfig.mag_hardware = 0;
+            masterConfig.pid_process_denom = 1;
         }
 #endif
-        masterConfig.gyro_sync_denom = constrain(looptime / gyroSampleRate, 1, maxDivider);
+
+        if (!(masterConfig.use_multiShot || masterConfig.use_oneshot42) && ((masterConfig.gyro_sync_denom * gyroSampleRate) == 125)) masterConfig.pid_process_denom = 3;
     }
 }
 
@@ -167,7 +208,7 @@ static const box_t boxes[CHECKBOX_ITEM_COUNT + 1] = {
     { BOXGOV, "GOVERNOR;", 18 },
     { BOXOSD, "OSD SW;", 19 },
     { BOXTELEMETRY, "TELEMETRY;", 20 },
-   // { BOXGTUNE, "GTUNE;", 21 },
+    { BOXGTUNE, "GTUNE;", 21 },
     { BOXSONAR, "SONAR;", 22 },
     { BOXSERVO1, "SERVO1;", 23 },
     { BOXSERVO2, "SERVO2;", 24 },
@@ -566,6 +607,10 @@ void mspInit(serialConfig_t *serialConfig)
         activeBoxIds[activeBoxIdCount++] = BOXFAILSAFE;
     }
 
+#ifdef GTUNE
+    activeBoxIds[activeBoxIdCount++] = BOXGTUNE;
+#endif
+
     memset(mspPorts, 0x00, sizeof(mspPorts));
     mspAllocateSerialPorts(serialConfig);
 }
@@ -599,6 +644,7 @@ static uint32_t packFlightModeFlags(void)
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXGOV)) << BOXGOV |
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXOSD)) << BOXOSD |
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXTELEMETRY)) << BOXTELEMETRY |
+        IS_ENABLED(IS_RC_MODE_ACTIVE(BOXGTUNE)) << BOXGTUNE |
         IS_ENABLED(FLIGHT_MODE(SONAR_MODE)) << BOXSONAR |
         IS_ENABLED(ARMING_FLAG(ARMED)) << BOXARM |
         IS_ENABLED(IS_RC_MODE_ACTIVE(BOXBLACKBOX)) << BOXBLACKBOX |
@@ -1231,6 +1277,7 @@ static bool processInCommand(void)
     uint32_t i;
     uint16_t tmp;
     uint8_t rate;
+    uint8_t oldPid;
 #ifdef GPS
     uint8_t wp_no;
     int32_t lat = 0, lon = 0, alt = 0;
@@ -1278,8 +1325,10 @@ static bool processInCommand(void)
         setGyroSamplingSpeed(read16());
         break;
     case MSP_SET_PID_CONTROLLER:
+        oldPid = currentProfile->pidProfile.pidController;
         currentProfile->pidProfile.pidController = read8();
         pidSetController(currentProfile->pidProfile.pidController);
+        if (oldPid != currentProfile->pidProfile.pidController) setGyroSamplingSpeed(0); // recalculate looptimes for new PID
         break;
     case MSP_SET_PID:
         if (IS_PID_CONTROLLER_FP_BASED(currentProfile->pidProfile.pidController)) {

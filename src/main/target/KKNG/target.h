@@ -171,6 +171,7 @@
 #define USE_SERVOS
 #define USE_CLI
 #define SONAR
+#define GTUNE
 
 #define SPEKTRUM_BIND
 // USART3,
