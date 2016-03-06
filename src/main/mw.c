@@ -78,6 +78,7 @@
 #include "flight/imu.h"
 #include "flight/altitudehold.h"
 #include "flight/failsafe.h"
+#include "flight/gtune.h"
 #include "flight/navigation.h"
 
 #include "config/runtime_config.h"
@@ -92,8 +93,6 @@ enum {
     ALIGN_ACCEL = 1,
     ALIGN_MAG = 2
 };
-
-//#define JITTER_DEBUG 0  // Specify debug value for jitter debug
 
 /* VBAT monitoring interval (in microseconds) - 1s*/
 #define VBATINTERVAL (6 * 3500)
@@ -134,6 +133,30 @@ void applyAndSaveAccelerometerTrimsDelta(rollAndPitchTrims_t *rollAndPitchTrimsD
     saveConfigAndNotify();
 }
 
+#ifdef GTUNE
+
+void updateGtuneState(void)
+{
+    static bool GTuneWasUsed = false;
+
+    if (IS_RC_MODE_ACTIVE(BOXGTUNE)) {
+        if (!FLIGHT_MODE(GTUNE_MODE) && ARMING_FLAG(ARMED)) {
+            ENABLE_FLIGHT_MODE(GTUNE_MODE);
+            init_Gtune(&currentProfile->pidProfile);
+            GTuneWasUsed = true;
+        }
+        if (!FLIGHT_MODE(GTUNE_MODE) && !ARMING_FLAG(ARMED) && GTuneWasUsed) {
+            saveConfigAndNotify();
+            GTuneWasUsed = false;
+        }
+    } else {
+        if (FLIGHT_MODE(GTUNE_MODE) && ARMING_FLAG(ARMED)) {
+            DISABLE_FLIGHT_MODE(GTUNE_MODE);
+        }
+    }
+}
+#endif
+
 bool isCalibrating()
 {
 #ifdef BARO
@@ -156,7 +179,7 @@ void filterRc(void){
     // Set RC refresh rate for sampling and channels to filter
     initRxRefreshRate(&rxRefreshRate);
 
-    rcInterpolationFactor = rxRefreshRate / targetLooptime + 1;
+    rcInterpolationFactor = rxRefreshRate / targetPidLooptime + 1;
 
     if (isRXDataNew) {
         for (int channel=0; channel < 4; channel++) {
@@ -248,7 +271,7 @@ void annexCode(void)
     }
 
     tmp = constrain(rcData[THROTTLE], masterConfig.rxConfig.mincheck, PWM_RANGE_MAX);
-    tmp = (uint32_t)(tmp - masterConfig.rxConfig.mincheck) * PWM_RANGE_MIN / (PWM_RANGE_MAX - masterConfig.rxConfig.mincheck);       // [MINCHECK;2000] -> [0;1000]
+    tmp = (uint32_t)(tmp - masterConfig.rxConfig.mincheck) * PWM_RANGE_MIN / (PWM_RANGE_MAX - masterConfig.rxConfig.mincheck);
     tmp2 = tmp / 100;
     rcCommand[THROTTLE] = lookupThrottleRC[tmp2] + (tmp - tmp2 * 100) * (lookupThrottleRC[tmp2 + 1] - lookupThrottleRC[tmp2]) / 100;    // [0;1000] -> expo -> [MINTHROTTLE;MAXTHROTTLE]
 
@@ -259,10 +282,6 @@ void annexCode(void)
         int16_t rcCommand_PITCH = rcCommand[PITCH] * cosDiff + rcCommand[ROLL] * sinDiff;
         rcCommand[ROLL] = rcCommand[ROLL] * cosDiff - rcCommand[PITCH] * sinDiff;
         rcCommand[PITCH] = rcCommand_PITCH;
-    }
-
-    if (masterConfig.rxConfig.rcSmoothing || flightModeFlags) {
-        filterRc();
     }
 
     // experimental scaling of RC command to FPV cam angle
@@ -619,55 +638,6 @@ static bool haveProcessedAnnexCodeOnce = false;
 
 void taskMainPidLoop(void)
 {
-    imuUpdateGyroAndAttitude();
-
-    annexCode();
-
-#if defined(BARO) || defined(SONAR)
-    haveProcessedAnnexCodeOnce = true;
-#endif
-
-#ifdef MAG
-        if (sensors(SENSOR_MAG)) {
-            updateMagHold();
-        }
-#endif
-
-#if defined(BARO) || defined(SONAR)
-        if (sensors(SENSOR_BARO) || sensors(SENSOR_SONAR)) {
-            if (FLIGHT_MODE(BARO_MODE) || FLIGHT_MODE(SONAR_MODE)) {
-                applyAltHold(&masterConfig.airplaneConfig);
-            }
-        }
-#endif
-
-    // If we're armed, at minimum throttle, and we do arming via the
-    // sticks, do not process yaw input from the rx.  We do this so the
-    // motors do not spin up while we are trying to arm or disarm.
-    // Allow yaw control for tricopters if the user wants the servo to move even when unarmed.
-    if (isUsingSticksForArming() && rcData[THROTTLE] <= masterConfig.rxConfig.mincheck
-#ifndef USE_QUAD_MIXER_ONLY
-#ifdef USE_SERVOS
-                && !((masterConfig.mixerMode == MIXER_TRI || masterConfig.mixerMode == MIXER_CUSTOM_TRI) && masterConfig.mixerConfig.tri_unarmed_servo)
-#endif
-                && masterConfig.mixerMode != MIXER_AIRPLANE
-                && masterConfig.mixerMode != MIXER_FLYING_WING
-#endif
-    ) {
-        rcCommand[YAW] = 0;
-    }
-
-    if (masterConfig.throttle_correction_value && (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE))) {
-        rcCommand[THROTTLE] += calculateThrottleAngleCorrection(masterConfig.throttle_correction_value);
-    }
-
-#ifdef GPS
-    if (sensors(SENSOR_GPS)) {
-        if ((FLIGHT_MODE(GPS_HOME_MODE) || FLIGHT_MODE(GPS_HOLD_MODE)) && STATE(GPS_FIX_HOME)) {
-            updateGpsStateForHomeAndHoldMode();
-        }
-    }
-#endif
 
     // PID - note this is function pointer set by setPIDController()
     pid_controller(
@@ -679,6 +649,87 @@ void taskMainPidLoop(void)
     );
 
     mixTable();
+}
+
+void subTasksMainPidLoop(void) {
+
+    if (masterConfig.rxConfig.rcSmoothing || flightModeFlags) {
+        filterRc();
+    }
+
+    #if defined(BARO) || defined(SONAR)
+        haveProcessedAnnexCodeOnce = true;
+    #endif
+
+    #ifdef MAG
+            if (sensors(SENSOR_MAG)) {
+                updateMagHold();
+            }
+    #endif
+
+    #ifdef GTUNE
+            updateGtuneState();
+    #endif
+
+    #if defined(BARO) || defined(SONAR)
+            if (sensors(SENSOR_BARO) || sensors(SENSOR_SONAR)) {
+                if (FLIGHT_MODE(BARO_MODE) || FLIGHT_MODE(SONAR_MODE)) {
+                    applyAltHold(&masterConfig.airplaneConfig);
+                }
+            }
+    #endif
+
+        // If we're armed, at minimum throttle, and we do arming via the
+        // sticks, do not process yaw input from the rx.  We do this so the
+        // motors do not spin up while we are trying to arm or disarm.
+        // Allow yaw control for tricopters if the user wants the servo to move even when unarmed.
+        if (isUsingSticksForArming() && rcData[THROTTLE] <= masterConfig.rxConfig.mincheck
+    #ifndef USE_QUAD_MIXER_ONLY
+    #ifdef USE_SERVOS
+                    && !((masterConfig.mixerMode == MIXER_TRI || masterConfig.mixerMode == MIXER_CUSTOM_TRI) && masterConfig.mixerConfig.tri_unarmed_servo)
+    #endif
+                    && masterConfig.mixerMode != MIXER_AIRPLANE
+                    && masterConfig.mixerMode != MIXER_FLYING_WING
+    #endif
+        ) {
+            rcCommand[YAW] = 0;
+        }
+
+        if (masterConfig.throttle_correction_value && (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE))) {
+            rcCommand[THROTTLE] += calculateThrottleAngleCorrection(masterConfig.throttle_correction_value);
+        }
+
+    #ifdef GPS
+        if (sensors(SENSOR_GPS)) {
+            if ((FLIGHT_MODE(GPS_HOME_MODE) || FLIGHT_MODE(GPS_HOLD_MODE)) && STATE(GPS_FIX_HOME)) {
+                updateGpsStateForHomeAndHoldMode();
+            }
+        }
+    #endif
+
+    #ifdef USE_SDCARD
+        afatfs_poll();
+    #endif
+
+    #ifdef BLACKBOX
+        if (!cliMode && feature(FEATURE_BLACKBOX)) {
+            handleBlackbox();
+        }
+    #endif
+
+    #ifdef TRANSPONDER
+        updateTransponder();
+    #endif
+}
+
+void taskMotorUpdate(void) {
+    if (debugMode == DEBUG_CYCLETIME) {
+        static uint32_t previousMotorUpdateTime;
+        uint32_t currentDeltaTime = micros() - previousMotorUpdateTime;
+        debug[2] = currentDeltaTime;
+        debug[3] = currentDeltaTime - targetPidLooptime;
+        previousMotorUpdateTime = micros();
+    }
 
 #ifdef USE_SERVOS
     filterServos();
@@ -688,49 +739,67 @@ void taskMainPidLoop(void)
     if (motorControlEnable) {
         writeMotors();
     }
+}
 
-#ifdef USE_SDCARD
-    afatfs_poll();
-#endif
-
-#ifdef BLACKBOX
-    if (!cliMode && feature(FEATURE_BLACKBOX)) {
-        handleBlackbox();
+// Check for oneshot125 protection. With fast looptimes oneshot125 pulse duration gets more near the pid looptime
+bool shouldUpdateMotorsAfterPIDLoop(void) {
+    if (targetPidLooptime > 375 ) {
+        return true;
+    } else if ((masterConfig.use_multiShot || masterConfig.use_oneshot42) && feature(FEATURE_ONESHOT125)) {
+        return true;
+    } else {
+        return false;
     }
-#endif
-
-#ifdef TRANSPONDER
-    updateTransponder();
-#endif
 }
 
 // Function for loop trigger
 void taskMainPidLoopCheck(void) {
     static uint32_t previousTime;
+    static bool runTaskMainSubprocesses;
+
+    uint32_t currentDeltaTime = getTaskDeltaTime(TASK_SELF);
 
     cycleTime = micros() - previousTime;
     previousTime = micros();
 
-    // Debugging parameters
-    debug[0] = cycleTime;
-    debug[1] = cycleTime - targetLooptime;
-    debug[2] = averageSystemLoadPercent;
+    if (debugMode == DEBUG_CYCLETIME) {
+        debug[0] = cycleTime;
+        debug[1] = averageSystemLoadPercent;
+    }
 
-    while (1) {
-        if (gyroSyncCheckUpdate() || ((cycleTime + (micros() - previousTime)) >= (targetLooptime + GYRO_WATCHDOG_DELAY))) {
-            while (1) {
-                if (micros() >= masterConfig.pid_jitter_buffer + previousTime) break;
+    while (true) {
+        if (gyroSyncCheckUpdate() || ((currentDeltaTime + (micros() - previousTime)) >= (targetLooptime + GYRO_WATCHDOG_DELAY))) {
+            static uint8_t pidUpdateCountdown;
+
+            if (runTaskMainSubprocesses) {
+                if (!shouldUpdateMotorsAfterPIDLoop()) taskMotorUpdate();
+                subTasksMainPidLoop();
+                runTaskMainSubprocesses = false;
             }
+
+            imuUpdateGyro();
+
+            if (pidUpdateCountdown) {
+                pidUpdateCountdown--;
+            } else {
+                pidUpdateCountdown = masterConfig.pid_process_denom - 1;
+                taskMainPidLoop();
+                if (shouldUpdateMotorsAfterPIDLoop()) taskMotorUpdate();
+                runTaskMainSubprocesses = true;
+            }
+
             break;
         }
     }
-
-    taskMainPidLoop();
 }
 
 void taskUpdateAccelerometer(void)
 {
     imuUpdateAccelerometer(&masterConfig.accelerometerTrims);
+}
+
+void taskUpdateAttitude(void) {
+    imuUpdateAttitude();
 }
 
 void taskHandleSerial(void)
@@ -793,6 +862,7 @@ void taskUpdateRxMain(void)
         }
     }
 #endif
+    annexCode();
 }
 
 #ifdef GPS
@@ -879,6 +949,15 @@ void taskLedStrip(void)
 {
     if (feature(FEATURE_LED_STRIP)) {
         updateLedStrip();
+    }
+}
+#endif
+
+#ifdef TRANSPONDER
+void taskTransponder(void)
+{
+    if (feature(FEATURE_TRANSPONDER)) {
+        updateTransponder();
     }
 }
 #endif

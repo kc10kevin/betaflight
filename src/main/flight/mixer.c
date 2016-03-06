@@ -753,7 +753,7 @@ void acroPlusApply(void) {
 
     for (axis = 0; axis < 2; axis++) {
         int16_t factor;
-        q_number_t wowFactor;
+        fix12_t wowFactor;
         int16_t rcCommandDeflection = constrain(rcCommand[axis], -500, 500); // Limit stick input to 500 (rcCommand 100)
         int16_t acroPlusStickOffset = rxConfig->acroPlusOffset * 5;
         int16_t motorRange = escAndServoConfig->maxthrottle - escAndServoConfig->minthrottle;
@@ -766,11 +766,11 @@ void acroPlusApply(void) {
             } else {
                 rcCommandDeflection += acroPlusStickOffset;
             }
-            qConstruct(&wowFactor,ABS(rcCommandDeflection) * rxConfig->acroPlusFactor / 100, 500, Q12_NUMBER);
+            wowFactor = qConstruct(ABS(rcCommandDeflection) * rxConfig->acroPlusFactor / 100, 500);
             factor = qMultiply(wowFactor, (rcCommandDeflection * motorRange) / 500);
-            wowFactor.num = wowFactor.den - wowFactor.num;
+            wowFactor = Q12 - wowFactor;
         } else {
-            qConstruct(&wowFactor, 1, 1, Q12_NUMBER);
+            wowFactor = Q12;
             factor = 0;
         }
         axisPID[axis] = factor + qMultiply(wowFactor, axisPID[axis]);
@@ -780,9 +780,15 @@ void acroPlusApply(void) {
 void mixTable(void)
 {
     uint32_t i;
-    q_number_t vbatCompensationFactor;
+    fix12_t vbatCompensationFactor;
+    static fix12_t mixReduction;
 
     bool isFailsafeActive = failsafeIsActive(); // TODO - Find out if failsafe checks are really needed here in mixer code
+
+    if (motorLimitReached) {
+        axisPID[YAW] *= constrain(qPercent(mixReduction), 40, 100);
+        if (debugMode == DEBUG_AIRMODE) debug[0] = axisPID[YAW];
+    }
 
     if (IS_RC_MODE_ACTIVE(BOXACROPLUS)) {
         acroPlusApply();
@@ -811,6 +817,8 @@ void mixTable(void)
 
         if (rollPitchYawMix[i] > rollPitchYawMixMax) rollPitchYawMixMax = rollPitchYawMix[i];
         if (rollPitchYawMix[i] < rollPitchYawMixMin) rollPitchYawMixMin = rollPitchYawMix[i];
+
+        if (debugMode == DEBUG_MIXER && i < 5) debug[i] = rollPitchYawMix[i];
     }
 
     // Scale roll/pitch/yaw uniformly to fit within throttle range
@@ -848,17 +856,15 @@ void mixTable(void)
 
     if (rollPitchYawMixRange > throttleRange) {
         motorLimitReached = true;
-        q_number_t mixReduction;
-        qConstruct(&mixReduction, throttleRange, rollPitchYawMixRange, Q12_NUMBER);
-        //float mixReduction = (float) throttleRange / rollPitchYawMixRange;
+        mixReduction = qConstruct(throttleRange, rollPitchYawMixRange);
+
         for (i = 0; i < motorCount; i++) {
             rollPitchYawMix[i] =  qMultiply(mixReduction,rollPitchYawMix[i]);
         }
-        // Get the maximum correction by setting offset to center. Only active below 50% of saturation levels to reduce spazzing out in crashes
-        if ((qPercent(mixReduction) > mixerConfig->airmode_saturation_limit) && IS_RC_MODE_ACTIVE(BOXAIRMODE)) {
-            throttleMin = throttleMax = throttleMin + (throttleRange / 2);
-        }
+        // Get the maximum correction by setting offset to center
+        throttleMin = throttleMax = throttleMin + (throttleRange / 2);
 
+        if (debugMode == DEBUG_AIRMODE && i < 3) debug[1] = rollPitchYawMixRange;
     } else {
         motorLimitReached = false;
         throttleMin = throttleMin + (rollPitchYawMixRange / 2);
@@ -960,7 +966,7 @@ bool isMixerUsingServos(void)
 void filterServos(void)
 {
 #ifdef USE_SERVOS
-    int16_t servoIdx;
+    static int16_t servoIdx;
     static bool servoFilterIsSet;
     static biquad_t servoFilterState[MAX_SUPPORTED_SERVOS];
 
@@ -971,7 +977,7 @@ void filterServos(void)
     if (mixerConfig->servo_lowpass_enable) {
         for (servoIdx = 0; servoIdx < MAX_SUPPORTED_SERVOS; servoIdx++) {
             if (!servoFilterIsSet) {
-                BiQuadNewLpf(mixerConfig->servo_lowpass_freq, &servoFilterState[servoIdx], targetLooptime);
+                BiQuadNewLpf(mixerConfig->servo_lowpass_freq, &servoFilterState[servoIdx], targetPidLooptime);
                 servoFilterIsSet = true;
             }
 
