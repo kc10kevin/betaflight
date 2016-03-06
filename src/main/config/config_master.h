@@ -27,8 +27,6 @@ typedef struct master_t {
     uint32_t enabledFeatures;
     uint8_t emf_avoidance;                   // change pll settings to avoid noise in the uhf band
 
-    beeperOffConditions_t beeper_off;
-    
     // motor/esc/servo related stuff
     motorMixer_t customMotorMixer[MAX_SUPPORTED_MOTORS];
     escAndServoConfig_t escAndServoConfig;
@@ -36,7 +34,8 @@ typedef struct master_t {
 
     uint16_t motor_pwm_rate;                // The update rate of motor outputs (50-498Hz)
     uint16_t servo_pwm_rate;                // The update rate of servo outputs (50-498Hz)
-    uint8_t use_fast_pwm;                   // Use fast PWM implementation when oneshot enabled
+    uint8_t use_oneshot42;                  // Oneshot42
+    uint8_t use_multiShot;                  // multishot
 
 #ifdef USE_SERVOS
     servoMixer_t customServoMixer[MAX_SERVO_RULES];
@@ -63,7 +62,9 @@ typedef struct master_t {
     uint16_t dcm_kp;                        // DCM filter proportional gain ( x 10000)
     uint16_t dcm_ki;                        // DCM filter integral gain ( x 10000)
 
-    uint8_t pid_jitter_buffer;              // Jitter buffer time in us for pid controller for smoother motor output
+    uint8_t pid_process_denom;              // Processing denominator for PID controller vs gyro sampling rate
+
+    uint8_t debug_mode;                     // Processing denominator for PID controller vs gyro sampling rate
 
     gyroConfig_t gyroConfig;
 
@@ -135,6 +136,9 @@ typedef struct master_t {
     uint8_t blackbox_rate_denom;
     uint8_t blackbox_device;
 #endif
+
+    uint32_t beeper_off_flags;
+    uint32_t prefered_beeper_off_flags;
 
     uint8_t magic_ef;                       // magic number, should be 0xEF
     uint8_t chk;                            // XOR checksum

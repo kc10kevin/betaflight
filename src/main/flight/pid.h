@@ -75,13 +75,22 @@ typedef struct pidProfile_s {
     uint16_t yaw_p_limit;
     uint8_t dterm_average_count;            // Configurable delta count for dterm
 
+#ifdef GTUNE
+    uint8_t  gtune_lolimP[3];               // [0..200] Lower limit of P during G tune
+    uint8_t  gtune_hilimP[3];               // [0..200] Higher limit of P during G tune. 0 Disables tuning for that axis.
+    uint8_t  gtune_pwr;                     // [0..10] Strength of adjustment
+    uint16_t gtune_settle_time;             // [200..1000] Settle time in ms
+    uint8_t  gtune_average_cycles;          // [8..128] Number of looptime cycles used for gyro average calculation
+#endif
 } pidProfile_t;
 
 extern int16_t axisPID[XYZ_AXIS_COUNT];
 extern int32_t axisPID_P[3], axisPID_I[3], axisPID_D[3];
 bool antiWindupProtection;
+extern uint32_t targetPidLooptime;
 
 void pidSetController(pidControllerType_e type);
 void pidResetErrorAngle(void);
 void pidResetErrorGyroState(uint8_t resetOption);
+void setTargetPidLooptime(uint8_t pidProcessDenom);
 

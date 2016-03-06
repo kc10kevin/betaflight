@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "platform.h"
 #include "scheduler.h"
@@ -146,6 +147,7 @@ typedef enum {
     SYSTEM_STATE_CONFIG_LOADED  = (1 << 0),
     SYSTEM_STATE_SENSORS_READY  = (1 << 1),
     SYSTEM_STATE_MOTORS_READY   = (1 << 2),
+    SYSTEM_STATE_TRANSPONDER_ENABLED = (1 << 3),
     SYSTEM_STATE_READY          = (1 << 7)
 } systemState_e;
 
@@ -181,6 +183,8 @@ void init(void)
     //i2cSetOverclock(masterConfig.i2c_overclock);
 
     systemInit();
+
+    debugMode = masterConfig.debug_mode;
 
 #ifdef USE_HARDWARE_REVISION_DETECTION
     detectHardwareRevision();
@@ -308,12 +312,17 @@ void init(void)
 #endif
 
     pwm_params.useOneshot = feature(FEATURE_ONESHOT125);
-    pwm_params.useFastPWM = masterConfig.use_fast_pwm ? true : false;
+    if (masterConfig.use_oneshot42) {
+        pwm_params.useOneshot42 = masterConfig.use_oneshot42 ? true : false;
+        masterConfig.use_multiShot = false;
+    } else {
+        pwm_params.useMultiShot = masterConfig.use_multiShot ? true : false;
+    }
     pwm_params.motorPwmRate = masterConfig.motor_pwm_rate;
     pwm_params.idlePulse = masterConfig.escAndServoConfig.mincommand;
     if (feature(FEATURE_3D))
         pwm_params.idlePulse = masterConfig.flight3DConfig.neutral3d;
-    if (pwm_params.motorPwmRate > 500 && !masterConfig.use_fast_pwm)
+    if (pwm_params.motorPwmRate > 500)
         pwm_params.idlePulse = 0; // brushed motors
 #if defined(CC3D) || defined (CC3DF3)
     pwm_params.useBuzzerP6 = masterConfig.use_buzzer_p6 ? true : false;
@@ -473,7 +482,7 @@ void init(void)
         LED1_TOGGLE;
         LED0_TOGGLE;
         delay(25);
-        BEEP_ON;
+        if (!(getPreferedBeeperOffMask() & (1 << (BEEPER_SYSTEM_INIT - 1)))) BEEP_ON;
         delay(25);
         BEEP_OFF;
     }
@@ -579,6 +588,14 @@ void init(void)
     afatfs_init();
 #endif
 
+    if (masterConfig.gyro_lpf > 0 && masterConfig.gyro_lpf < 7) {
+        masterConfig.pid_process_denom = 1; // When gyro set to 1khz always set pid speed 1:1 to sampling speed
+        masterConfig.gyro_sync_denom = 1;
+    }
+
+    setTargetPidLooptime(masterConfig.pid_process_denom); // Initialize pid looptime
+
+
 #ifdef BLACKBOX
     initBlackbox();
 #endif
@@ -652,23 +669,21 @@ int main(void) {
     init();
 
     /* Setup scheduler */
-    rescheduleTask(TASK_GYROPID, targetLooptime - INTERRUPT_WAIT_TIME);
-
+    schedulerInit();
+    rescheduleTask(TASK_GYROPID, targetLooptime);
     setTaskEnabled(TASK_GYROPID, true);
+
     if(sensors(SENSOR_ACC)) {
         setTaskEnabled(TASK_ACCEL, true);
-        switch(targetLooptime) {
-            case(500):
-                accTargetLooptime = 10000;
-                break;
-            case(375):
-                accTargetLooptime = 20000;
-                break;
-            case(250):
-                accTargetLooptime = 30000;
-                break;
-            default:
-            case(1000):
+        switch(targetLooptime) {  // Switch statement kept in place to change acc rates in the future
+             case(500):
+             case(375):
+             case(250):
+             case(125):
+                 accTargetLooptime = 1000;
+                 break;
+             default:
+                 case(1000):
 #ifdef STM32F10X
                 accTargetLooptime = 3000;
 #else
@@ -677,8 +692,12 @@ int main(void) {
         }
         rescheduleTask(TASK_ACCEL, accTargetLooptime);
     }
+    setTaskEnabled(TASK_ACCEL, sensors(SENSOR_ACC));
+    setTaskEnabled(TASK_ATTITUDE, sensors(SENSOR_ACC));
     setTaskEnabled(TASK_SERIAL, true);
+#ifdef BEEPER
     setTaskEnabled(TASK_BEEPER, true);
+#endif
     setTaskEnabled(TASK_BATTERY, feature(FEATURE_VBAT) || feature(FEATURE_CURRENT_METER));
     setTaskEnabled(TASK_RX, true);
 #ifdef GPS
@@ -707,6 +726,9 @@ int main(void) {
 #ifdef LED_STRIP
     setTaskEnabled(TASK_LEDSTRIP, feature(FEATURE_LED_STRIP));
 #endif
+#ifdef TRANSPONDER
+    setTaskEnabled(TASK_TRANSPONDER, feature(FEATURE_TRANSPONDER));
+#endif
 #ifdef USE_BST
     setTaskEnabled(TASK_BST_READ_WRITE, true);
     setTaskEnabled(TASK_BST_MASTER_PROCESS, true);
@@ -721,9 +743,17 @@ int main(void) {
 void HardFault_Handler(void)
 {
     // fall out of the sky
-    uint8_t requiredState = SYSTEM_STATE_CONFIG_LOADED | SYSTEM_STATE_MOTORS_READY;
-    if ((systemState & requiredState) == requiredState) {
+    uint8_t requiredStateForMotors = SYSTEM_STATE_CONFIG_LOADED | SYSTEM_STATE_MOTORS_READY;
+    if ((systemState & requiredStateForMotors) == requiredStateForMotors) {
         stopMotors();
     }
+#ifdef TRANSPONDER
+    // prevent IR LEDs from burning out.
+    uint8_t requiredStateForTransponder = SYSTEM_STATE_CONFIG_LOADED | SYSTEM_STATE_TRANSPONDER_ENABLED;
+    if ((systemState & requiredStateForTransponder) == requiredStateForTransponder) {
+        transponderIrDisable();
+    }
+#endif
+
     while (1);
 }
