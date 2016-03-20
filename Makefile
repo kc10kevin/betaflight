@@ -139,6 +139,13 @@ INCLUDE_DIRS := $(INCLUDE_DIRS) \
 VPATH := $(VPATH):$(FATFS_DIR)
 endif
 
+ifeq ($(TARGET),KKNG)
+INCLUDE_DIRS := $(INCLUDE_DIRS) \
+		   $(FATFS_DIR) \
+
+VPATH := $(VPATH):$(FATFS_DIR)
+endif
+
 LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f303_$(FLASH_SIZE)k.ld
 
 ARCH_FLAGS	 = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
@@ -759,10 +766,13 @@ KKNG_SRC = \
 		   drivers/light_ws2811strip.c \
 		   drivers/light_ws2811strip_stm32f30x.c \
 		   drivers/serial_usb_vcp.c \
+		   drivers/sdcard.c \
+		   drivers/sdcard_standard.c \
 		   drivers/flash_m25p16.c \
 		   drivers/sonar_hcsr04.c \
 		   drivers/serial_softserial.c \
-		   io/flashfs.c \
+		   io/asyncfatfs/asyncfatfs.c \
+		   io/asyncfatfs/fat_standard.c \
 		   $(HIGHEND_SRC) \
 		   $(COMMON_SRC) \
 		   $(VCP_SRC)
