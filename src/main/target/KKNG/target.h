@@ -22,15 +22,8 @@
 #define LED0
 
 #define LED0_GPIO   GPIOC
-#define LED0_PIN    Pin_13
+#define LED0_PIN    Pin_14
 #define LED0_PERIPHERAL RCC_AHBPeriph_GPIOC
-
-#define LED1
-
-#define LED1_GPIO   GPIOC
-#define LED1_PIN    Pin_14
-#define LED1_PERIPHERAL RCC_AHBPeriph_GPIOC
-
 
 #define BEEPER
 #define BEEP_GPIO   GPIOC
