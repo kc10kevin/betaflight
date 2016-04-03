@@ -31,6 +31,9 @@
 #define BEEP_PERIPHERAL RCC_AHBPeriph_GPIOC
 #define BEEPER_INVERTED
 
+#define USE_ESCSERIAL
+#define ESCSERIAL_TIMER_TX_HARDWARE 0 // PWM 1
+
 #define EXTI15_10_CALLBACK_HANDLER_COUNT 2 // MPU_INT, SDCardDetect
 
 #define USE_MPU_DATA_READY_SIGNAL
@@ -212,7 +215,7 @@
 #define USE_SERVOS
 #define USE_CLI
 #define SONAR
-#define GTUNE
+//#define GTUNE
 
 #define SPEKTRUM_BIND
 // USART3,
