@@ -28,9 +28,6 @@
 #define BEEP_PERIPHERAL RCC_AHBPeriph_GPIOC
 #define BEEPER_INVERTED
 
-#define USE_ESCSERIAL
-#define ESCSERIAL_TIMER_TX_HARDWARE 0 // PWM 1
-
 #define USABLE_TIMER_CHANNEL_COUNT 17
 
 #define EXTI_CALLBACK_HANDLER_COUNT 2 // MPU data ready and MAG data ready
@@ -157,9 +154,4 @@
 #define BIND_PORT  GPIOB
 #define BIND_PIN   Pin_11
 
-#define USE_SERIAL_1WIRE
-
-#define S1W_TX_GPIO         GPIOA
-#define S1W_TX_PIN          GPIO_Pin_9
-#define S1W_RX_GPIO         GPIOA
-#define S1W_RX_PIN          GPIO_Pin_10
+#define USE_SERIAL_4WAY_BLHELI_INTERFACE

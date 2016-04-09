@@ -29,9 +29,6 @@
 #define LED1_PIN    Pin_4 // PB4 (LED)
 #define LED1_PERIPHERAL RCC_APB2Periph_GPIOB
 
-#define USE_ESCSERIAL
-#define ESCSERIAL_TIMER_TX_HARDWARE 0 // PWM 1
-
 #define BEEP_GPIO   GPIOA
 #define BEEP_PIN    Pin_12 // PA12 (Beeper)
 #define BEEP_PERIPHERAL RCC_APB2Periph_GPIOA
@@ -191,14 +188,7 @@
 #define BIND_PORT  GPIOA
 #define BIND_PIN   Pin_3
 
-#define USE_SERIAL_1WIRE
-
-// STM32F103CBT6-LQFP48 Pin30 (PA9) TX - PC3 connects to onboard CP2102 RX
-#define S1W_TX_GPIO         GPIOA
-#define S1W_TX_PIN          GPIO_Pin_9
-// STM32F103CBT6-LQFP48 Pin31 (PA10) RX - PC1 to onboard CP2102 TX
-#define S1W_RX_GPIO         GPIOA
-#define S1W_RX_PIN          GPIO_Pin_10
+#define USE_SERIAL_4WAY_BLHELI_INTERFACE
 
 // alternative defaults for AlienWii32 F1 target
 #ifdef ALIENWII32

@@ -174,7 +174,7 @@ static void resetPidProfile(pidProfile_t *pidProfile)
     pidProfile->P8[PIDMAG] = 40;
     pidProfile->P8[PIDVEL] = 55;
     pidProfile->I8[PIDVEL] = 55;
-    pidProfile->D8[PIDVEL] = 0;
+    pidProfile->D8[PIDVEL] = 75;
 
     pidProfile->yaw_p_limit = YAW_P_LIMIT_MAX;
     pidProfile->yaw_lpf_hz = 70.0f;
@@ -184,7 +184,7 @@ static void resetPidProfile(pidProfile_t *pidProfile)
     pidProfile->dterm_lpf_hz = 70.0f;    // filtering ON by default
     pidProfile->deltaMethod = DELTA_FROM_MEASUREMENT;
 
-    pidProfile->H_sensitivity = 75;
+    pidProfile->H_sensitivity = 75;  // TODO - Cleanup during next EEPROM changes
 
 #ifdef GTUNE
     pidProfile->gtune_lolimP[ROLL] = 10;          // [0..200] Lower limit of ROLL P during G tune.
@@ -380,7 +380,7 @@ static void resetConf(void)
     masterConfig.version = EEPROM_CONF_VERSION;
     masterConfig.mixerMode = MIXER_QUADX;
     featureClearAll();
-#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(KKNG) // addedkb
+#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(KKNG) || defined(DOGE)
     featureSet(FEATURE_RX_PPM);
 #endif
 
@@ -592,6 +592,13 @@ static void resetConf(void)
 
     featureSet(FEATURE_VBAT);
     featureSet(FEATURE_FAILSAFE);
+#endif
+
+#ifdef SPRACINGF3EVO
+    featureSet(FEATURE_TRANSPONDER);
+    featureSet(FEATURE_RSSI_ADC);
+    featureSet(FEATURE_CURRENT_METER);
+    featureSet(FEATURE_TELEMETRY);
 #endif
 
     // alternative defaults settings for ALIENFLIGHTF1 and ALIENFLIGHTF3 targets
