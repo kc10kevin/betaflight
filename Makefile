@@ -42,7 +42,7 @@ FORKNAME			 = betaflight
 
 CC3D_TARGETS = CC3D CC3D_OPBL
 
-VALID_TARGETS	 = NAZE NAZE32PRO OLIMEXINO STM32F3DISCOVERY CHEBUZZF3 $(CC3D_TARGETS) CJMCU EUSTM32F103RC SPRACINGF3 PORT103R SPARKY ALIENFLIGHTF1 ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO IRCFUSIONF3 AFROMINI SPRACINGF3MINI CC3DF3
+VALID_TARGETS	 = NAZE NAZE32PRO OLIMEXINO STM32F3DISCOVERY CHEBUZZF3 $(CC3D_TARGETS) CJMCU EUSTM32F103RC SPRACINGF3 PORT103R SPARKY ALIENFLIGHTF1 ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO IRCFUSIONF3 AFROMINI SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE
 
 # Valid targets for OP VCP support
 VCP_VALID_TARGETS = $(CC3D_TARGETS)
@@ -52,10 +52,9 @@ OPBL_VALID_TARGETS = CC3D_OPBL
 
 64K_TARGETS  = CJMCU
 128K_TARGETS = ALIENFLIGHTF1 $(CC3D_TARGETS) NAZE OLIMEXINO RMDO AFROMINI
-256K_TARGETS = EUSTM32F103RC PORT103R STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB SPRACINGF3MINI CC3DF3
+256K_TARGETS = EUSTM32F103RC PORT103R STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE
 
-F3_TARGETS = STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO SPRACINGF3MINI CC3DF3
-
+F3_TARGETS = STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE
 
 # Configure default flash sizes for the targets
 ifeq ($(FLASH_SIZE),)
@@ -303,7 +302,9 @@ COMMON_SRC = build_config.c \
 		   io/rc_controls.c \
 		   io/rc_curves.c \
 		   io/serial.c \
-		   io/serial_1wire.c \
+		   io/serial_4way.c \
+		   io/serial_4way_avrootloader.c \
+		   io/serial_4way_stk500v2.c \
 		   io/serial_cli.c \
 		   io/serial_msp.c \
 		   io/statusindicator.c \
@@ -352,7 +353,8 @@ VCP_SRC = \
 		   vcp/usb_istr.c \
 		   vcp/usb_prop.c \
 		   vcp/usb_pwr.c \
-		   drivers/serial_usb_vcp.c
+		   drivers/serial_usb_vcp.c \
+		   drivers/usb_io.c
 
 NAZE_SRC = startup_stm32f10x_md_gcc.S \
 		   drivers/accgyro_adxl345.c \
@@ -621,6 +623,20 @@ LUX_RACE_SRC = \
 		   $(HIGHEND_SRC) \
 		   $(COMMON_SRC) \
 		   $(VCP_SRC)
+
+DOGE_SRC = \
+		   $(STM32F30x_COMMON_SRC) \
+		   drivers/accgyro_mpu.c \
+		   drivers/accgyro_mpu6500.c \
+		   drivers/accgyro_spi_mpu6500.c \
+		   drivers/barometer_bmp280.c \
+		   drivers/barometer_spi_bmp280.c \
+		   drivers/light_ws2811strip.c \
+		   drivers/light_ws2811strip_stm32f30x.c \
+		   drivers/serial_usb_vcp.c \
+		   $(HIGHEND_SRC) \
+		   $(COMMON_SRC) \
+		   $(VCP_SRC)
 		   
 SPARKY_SRC = \
 		   $(STM32F30x_COMMON_SRC) \
@@ -704,6 +720,28 @@ IRCFUSIONF3_SRC = \
 		   io/flashfs.c \
 		   $(HIGHEND_SRC) \
 		   $(COMMON_SRC)
+
+SPRACINGF3EVO_SRC	 = \
+		   $(STM32F30x_COMMON_SRC) \
+		   drivers/accgyro_mpu.c \
+		   drivers/accgyro_mpu6500.c \
+		   drivers/accgyro_spi_mpu6500.c \
+		   drivers/barometer_bmp280.c \
+		   drivers/compass_ak8963.c \
+		   drivers/display_ug2864hsweg01.h \
+		   drivers/light_ws2811strip.c \
+		   drivers/light_ws2811strip_stm32f30x.c \
+		   drivers/serial_usb_vcp.c \
+		   drivers/sdcard.c \
+		   drivers/sdcard_standard.c \
+		   drivers/transponder_ir.c \
+		   drivers/transponder_ir_stm32f30x.c \
+		   io/asyncfatfs/asyncfatfs.c \
+		   io/asyncfatfs/fat_standard.c \
+		   io/transponder_ir.c \
+		   $(HIGHEND_SRC) \
+		   $(COMMON_SRC) \
+		   $(VCP_SRC)
 
 MOTOLAB_SRC = \
 		   $(STM32F30x_COMMON_SRC) \
