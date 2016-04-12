@@ -34,7 +34,7 @@
 #define USE_ESCSERIAL
 #define ESCSERIAL_TIMER_TX_HARDWARE 0 // PWM 1
 
-#define EXTI15_10_CALLBACK_HANDLER_COUNT 2 // MPU_INT, SDCardDetect
+#define EXTI_CALLBACK_HANDLER_COUNT 2 // MPU INT, SDCardDetect
 
 #define USE_MPU_DATA_READY_SIGNAL
 #define ENSURE_MPU_DATA_READY_IS_LOW
@@ -222,9 +222,4 @@
 #define BIND_PORT  GPIOB
 #define BIND_PIN   Pin_11
 
-#define USE_SERIAL_1WIRE
-
-#define S1W_TX_GPIO         GPIOA
-#define S1W_TX_PIN          GPIO_Pin_9
-#define S1W_RX_GPIO         GPIOA
-#define S1W_RX_PIN          GPIO_Pin_10
+#define USE_SERIAL_4WAY_BLHELI_INTERFACE

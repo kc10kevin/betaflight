@@ -138,6 +138,9 @@ void mpu6000SpiGyroInit(uint8_t lpf)
     if (((int8_t)data[1]) == -1 && ((int8_t)data[0]) == -1) {
         failureMode(FAILURE_GYRO_INIT_FAILED);
     }
+    
+    spiSetDivisor(MPU6000_SPI_INSTANCE, SPI_18MHZ_CLOCK_DIVIDER);  // 18 MHz SPI clock
+
 }
 
 void mpu6000SpiAccInit(void)
