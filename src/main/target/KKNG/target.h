@@ -83,11 +83,11 @@
 #define SPI2_MOSI_PIN           Pin_15
 #define SPI2_MOSI_PIN_SOURCE    GPIO_PinSource15
 
-#define USE_FLASHFS
-#define USE_FLASH_M25P16
-#define M25P16_CS_GPIO          GPIOB
-#define M25P16_CS_PIN           GPIO_Pin_12
-#define M25P16_SPI_INSTANCE     SPI2
+//#define USE_FLASHFS
+//#define USE_FLASH_M25P16
+//#define M25P16_CS_GPIO          GPIOB
+//#define M25P16_CS_PIN           GPIO_Pin_12
+//#define M25P16_SPI_INSTANCE     SPI2
 
 #define USE_SDCARD
 #define USE_SDCARD_SPI2
