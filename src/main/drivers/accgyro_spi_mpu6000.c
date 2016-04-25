@@ -126,11 +126,13 @@ void mpu6000SpiGyroInit(uint8_t lpf)
 
     mpu6000AccAndGyroInit();
 
-//    spiSetDivisor(MPU6000_SPI_INSTANCE, SPI_0_5625MHZ_CLOCK_DIVIDER);
+    spiSetDivisor(MPU6000_SPI_INSTANCE, SPI_0_5625MHZ_CLOCK_DIVIDER);
 
     // Accel and Gyro DLPF Setting
     mpu6000WriteRegister(MPU6000_CONFIG, lpf);
     delayMicroseconds(1);
+    
+    spiSetDivisor(MPU6000_SPI_INSTANCE, SPI_18MHZ_CLOCK_DIVIDER);  // 18 MHz SPI clock    
 
     int16_t data[3];
     mpuGyroRead(data);
