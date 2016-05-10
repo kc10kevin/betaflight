@@ -112,7 +112,7 @@ int16_t telemTemperature1;      // gyro sensor temperature
 static uint32_t disarmAt;     // Time of automatic disarm when "Don't spin the motors when armed" is enabled and auto_disarm_delay is nonzero
 
 extern uint32_t currentTime;
-extern uint8_t dynP8[3], dynI8[3], dynD8[3], PIDweight[3];
+extern uint8_t PIDweight[3];
 extern bool antiWindupProtection;
 
 uint16_t filteredCycleTime;
@@ -223,16 +223,16 @@ void scaleRcCommandToFpvCamAngle(void) {
 void annexCode(void)
 {
     int32_t tmp, tmp2;
-    int32_t axis, prop1 = 0, prop2;
+    int32_t axis, prop;
 
     // PITCH & ROLL only dynamic PID adjustment,  depending on throttle value
     if (rcData[THROTTLE] < currentControlRateProfile->tpa_breakpoint) {
-        prop2 = 100;
+        prop = 100;
     } else {
         if (rcData[THROTTLE] < 2000) {
-            prop2 = 100 - (uint16_t)currentControlRateProfile->dynThrPID * (rcData[THROTTLE] - currentControlRateProfile->tpa_breakpoint) / (2000 - currentControlRateProfile->tpa_breakpoint);
+            prop = 100 - (uint16_t)currentControlRateProfile->dynThrPID * (rcData[THROTTLE] - currentControlRateProfile->tpa_breakpoint) / (2000 - currentControlRateProfile->tpa_breakpoint);
         } else {
-            prop2 = 100 - currentControlRateProfile->dynThrPID;
+            prop = 100 - currentControlRateProfile->dynThrPID;
         }
     }
 
@@ -247,10 +247,8 @@ void annexCode(void)
                 }
             }
 
-            tmp2 = tmp / 100;
-            rcCommand[axis] = lookupPitchRollRC[tmp2] + (tmp - tmp2 * 100) * (lookupPitchRollRC[tmp2 + 1] - lookupPitchRollRC[tmp2]) / 100;
-            prop1 = 100 - (uint16_t)currentControlRateProfile->rates[axis] * tmp / 500;
-            prop1 = (uint16_t)prop1 * prop2 / 100;
+            tmp2 = tmp / 20;
+            rcCommand[axis] = lookupPitchRollRC[tmp2] + (tmp - tmp2 * 20) * (lookupPitchRollRC[tmp2 + 1] - lookupPitchRollRC[tmp2]) / 20;
         } else if (axis == YAW) {
             if (masterConfig.rcControlsConfig.yaw_deadband) {
                 if (tmp > masterConfig.rcControlsConfig.yaw_deadband) {
@@ -259,22 +257,12 @@ void annexCode(void)
                     tmp = 0;
                 }
             }
-            tmp2 = tmp / 100;
-            rcCommand[axis] = (lookupYawRC[tmp2] + (tmp - tmp2 * 100) * (lookupYawRC[tmp2 + 1] - lookupYawRC[tmp2]) / 100) * -masterConfig.yaw_control_direction;
-            prop1 = 100 - (uint16_t)currentControlRateProfile->rates[axis] * ABS(tmp) / 500;
+            tmp2 = tmp / 20;
+            rcCommand[axis] = (lookupYawRC[tmp2] + (tmp - tmp2 * 20) * (lookupYawRC[tmp2 + 1] - lookupYawRC[tmp2]) / 20) * -masterConfig.yaw_control_direction;
         }
-        // FIXME axis indexes into pids.  use something like lookupPidIndex(rc_alias_e alias) to reduce coupling.
-        dynP8[axis] = (uint16_t)currentProfile->pidProfile.P8[axis] * prop1 / 100;
-        dynI8[axis] = (uint16_t)currentProfile->pidProfile.I8[axis] * prop1 / 100;
-        dynD8[axis] = (uint16_t)currentProfile->pidProfile.D8[axis] * prop1 / 100;
 
-        // non coupled PID reduction scaler used in PID controller 1 and PID controller 2. YAW TPA disabled. 100 means 100% of the pids
-        if (axis == YAW) {
-            PIDweight[axis] = 100;
-        }
-        else {
-            PIDweight[axis] = prop2;
-        }
+        // non coupled PID reduction scaler used in PID controller 1 and PID controller 2.
+        PIDweight[axis] = prop;
 
         if (rcData[axis] < masterConfig.rxConfig.midrc)
             rcCommand[axis] = -rcCommand[axis];
@@ -516,7 +504,6 @@ void processRx(void)
             } else {
                 pidResetErrorGyroState(RESET_ITERM_AND_REDUCE_PID);
             }
-            pidResetErrorAngle();
         }
     } else {
         pidResetErrorGyroState(RESET_DISABLE);
@@ -665,13 +652,9 @@ void processRx(void)
 
 }
 
-#if defined(BARO) || defined(SONAR)
-static bool haveProcessedAnnexCodeOnce = false;
-#endif
-
-void taskMainPidLoop(void)
+void subTaskPidController(void)
 {
-
+    const uint32_t startTime = micros();
     // PID - note this is function pointer set by setPIDController()
     pid_controller(
         &currentProfile->pidProfile,
@@ -680,19 +663,16 @@ void taskMainPidLoop(void)
         &masterConfig.accelerometerTrims,
         &masterConfig.rxConfig
     );
-
-    mixTable();
+    if (debugMode == DEBUG_PIDLOOP) {debug[2] = micros() - startTime;}
 }
 
-void subTasksMainPidLoop(void) {
+void subTaskMainSubprocesses(void) {
+
+    const uint32_t startTime = micros();
 
     if (masterConfig.rxConfig.rcSmoothing || flightModeFlags) {
         filterRc();
     }
-
-    #if defined(BARO) || defined(SONAR)
-        haveProcessedAnnexCodeOnce = true;
-    #endif
 
     #ifdef MAG
             if (sensors(SENSOR_MAG)) {
@@ -753,16 +733,21 @@ void subTasksMainPidLoop(void) {
     #ifdef TRANSPONDER
         updateTransponder();
     #endif
+    if (debugMode == DEBUG_PIDLOOP) {debug[1] = micros() - startTime;}
 }
 
-void taskMotorUpdate(void) {
+void subTaskMotorUpdate(void)
+{
+    const uint32_t startTime = micros();
     if (debugMode == DEBUG_CYCLETIME) {
         static uint32_t previousMotorUpdateTime;
-        uint32_t currentDeltaTime = micros() - previousMotorUpdateTime;
+        const uint32_t currentDeltaTime = startTime - previousMotorUpdateTime;
         debug[2] = currentDeltaTime;
         debug[3] = currentDeltaTime - targetPidLooptime;
-        previousMotorUpdateTime = micros();
+        previousMotorUpdateTime = startTime;
     }
+
+    mixTable();
 
 #ifdef USE_SERVOS
     filterServos();
@@ -770,8 +755,9 @@ void taskMotorUpdate(void) {
 #endif
 
     if (motorControlEnable) {
-        writeMotors();
+        writeMotors(masterConfig.use_unsyncedPwm);
     }
+    if (debugMode == DEBUG_PIDLOOP) {debug[3] = micros() - startTime;}
 }
 
 uint8_t setPidUpdateCountDown(void) {
@@ -782,23 +768,13 @@ uint8_t setPidUpdateCountDown(void) {
     }
 }
 
-// Check for oneshot125 protection. With fast looptimes oneshot125 pulse duration gets more near the pid looptime
-bool shouldUpdateMotorsAfterPIDLoop(void) {
-    if (targetPidLooptime > 375 ) {
-        return true;
-    } else if ((masterConfig.use_multiShot || masterConfig.use_oneshot42) && feature(FEATURE_ONESHOT125)) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
 // Function for loop trigger
-void taskMainPidLoopCheck(void) {
+void taskMainPidLoopCheck(void)
+{
     static uint32_t previousTime;
     static bool runTaskMainSubprocesses;
 
-    uint32_t currentDeltaTime = getTaskDeltaTime(TASK_SELF);
+    const uint32_t currentDeltaTime = getTaskDeltaTime(TASK_SELF);
 
     cycleTime = micros() - previousTime;
     previousTime = micros();
@@ -808,24 +784,25 @@ void taskMainPidLoopCheck(void) {
         debug[1] = averageSystemLoadPercent;
     }
 
+    const uint32_t startTime = micros();
     while (true) {
         if (gyroSyncCheckUpdate() || ((currentDeltaTime + (micros() - previousTime)) >= (targetLooptime + GYRO_WATCHDOG_DELAY))) {
             static uint8_t pidUpdateCountdown;
 
+            if (debugMode == DEBUG_PIDLOOP) {debug[0] = micros() - startTime;} // time spent busy waiting
             if (runTaskMainSubprocesses) {
-                if (!shouldUpdateMotorsAfterPIDLoop()) taskMotorUpdate();
-                subTasksMainPidLoop();
+                subTaskMainSubprocesses();
                 runTaskMainSubprocesses = false;
             }
 
-            imuUpdateGyro();
+            gyroUpdate();
 
             if (pidUpdateCountdown) {
                 pidUpdateCountdown--;
             } else {
                 pidUpdateCountdown = setPidUpdateCountDown();
-                taskMainPidLoop();
-                if (shouldUpdateMotorsAfterPIDLoop()) taskMotorUpdate();
+                subTaskPidController();
+                subTaskMotorUpdate();
                 runTaskMainSubprocesses = true;
             }
 
@@ -886,24 +863,19 @@ void taskUpdateRxMain(void)
     processRx();
     isRXDataNew = true;
 
+    // the 'annexCode' initialses rcCommand, which is needed by updateAltHoldState and updateSonarAltHoldState
+    annexCode();
 #ifdef BARO
-    // the 'annexCode' initialses rcCommand, updateAltHoldState depends on valid rcCommand data.
-    if (haveProcessedAnnexCodeOnce) {
-        if (sensors(SENSOR_BARO)) {
-            updateAltHoldState();
-        }
+    if (sensors(SENSOR_BARO)) {
+        updateAltHoldState();
     }
 #endif
 
 #ifdef SONAR
-    // the 'annexCode' initialses rcCommand, updateAltHoldState depends on valid rcCommand data.
-    if (haveProcessedAnnexCodeOnce) {
-        if (sensors(SENSOR_SONAR)) {
-            updateSonarAltHoldState();
-        }
+    if (sensors(SENSOR_SONAR)) {
+        updateSonarAltHoldState();
     }
 #endif
-    annexCode();
 }
 
 #ifdef GPS
