@@ -134,6 +134,8 @@ void mpu6000SpiGyroInit(uint8_t lpf)
     
     spiSetDivisor(MPU6000_SPI_INSTANCE, SPI_18MHZ_CLOCK_DIVIDER);  // 18 MHz SPI clock    
 
+    spiSetDivisor(MPU6000_SPI_INSTANCE, SPI_18MHZ_CLOCK_DIVIDER);  // 18 MHz SPI clock
+
     int16_t data[3];
     mpuGyroRead(data);
 
