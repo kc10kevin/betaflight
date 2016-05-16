@@ -152,7 +152,7 @@ void setGyroSamplingSpeed(uint16_t looptime) {
             masterConfig.pid_process_denom = 1;
             if (currentProfile->pidProfile.pidController == 2) masterConfig.pid_process_denom = 2;
             if (looptime < 250) {
-                masterConfig.pid_process_denom = 3;
+                masterConfig.pid_process_denom = 4;
             } else if (looptime < 375) {
                 if (currentProfile->pidProfile.pidController == 2) {
                     masterConfig.pid_process_denom = 3;
@@ -172,7 +172,8 @@ void setGyroSamplingSpeed(uint16_t looptime) {
         }
 #endif
 
-        if (!(masterConfig.use_multiShot || masterConfig.use_oneshot42) && ((masterConfig.gyro_sync_denom * gyroSampleRate) == 125)) masterConfig.pid_process_denom = 3;
+        // Oneshot125 protection
+        if ((masterConfig.fast_pwm_protocol == 0) && ((masterConfig.gyro_sync_denom * gyroSampleRate) == 125) && masterConfig.pid_process_denom < 3) masterConfig.pid_process_denom = 3;
     }
 }
 
@@ -1309,7 +1310,7 @@ static bool processInCommand(void)
         break;
     case MSP_SET_PID_CONTROLLER:
         oldPid = currentProfile->pidProfile.pidController;
-        currentProfile->pidProfile.pidController = read8();
+        currentProfile->pidProfile.pidController = constrain(read8(), 1, 2);
         pidSetController(currentProfile->pidProfile.pidController);
         if (oldPid != currentProfile->pidProfile.pidController) setGyroSamplingSpeed(0); // recalculate looptimes for new PID
         break;
@@ -1861,6 +1862,10 @@ void mspProcess(void)
             waitForSerialPortToFinishTransmitting(candidatePort->port);
             stopMotors();
             handleOneshotFeatureChangeOnRestart();
+            // On real flight controllers, systemReset() will do a soft reset of the device,
+            // reloading the program.  But to support offline testing this flag needs to be
+            // cleared so that the software doesn't continuously attempt to reboot itself.
+            isRebootScheduled = false;
             systemReset();
         }
     }
