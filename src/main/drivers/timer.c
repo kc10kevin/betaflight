@@ -391,7 +391,7 @@ const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
 
 #endif
 
-#ifdef KKNG
+#ifdef FURY
 const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
     { TIM2,  GPIOB, Pin_3,  TIM_Channel_2, TIM2_IRQn,               0, Mode_AF_PP,      GPIO_PinSource3,  GPIO_AF_1}, // PPM IN
     { TIM3,  GPIOB, Pin_0,  TIM_Channel_3, TIM3_IRQn,               0, Mode_AF_PP,      GPIO_PinSource0,  GPIO_AF_2}, // SS1 - PB0  - *TIM3_CH3, TIM1_CH2N, TIM8_CH2N

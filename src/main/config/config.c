@@ -386,7 +386,7 @@ static void resetConf(void)
     masterConfig.mixerMode = MIXER_QUADX;
     featureClearAll();
 
-#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(DOGE) || defined(KKNG) || defined(SINGULARITY)
+#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(DOGE) || defined(FURY) || defined(SINGULARITY)
     featureSet(FEATURE_RX_PPM);
 #endif
 
@@ -575,7 +575,7 @@ static void resetConf(void)
 #endif
 
 //#ifdef SPRACINGF3   changedkb
-#if defined(SPRACINGF3) || defined(KKNG)
+#if defined(SPRACINGF3) || defined(FURY)
     featureSet(FEATURE_BLACKBOX);
     masterConfig.blackbox_device = 1;
 #ifdef TRANSPONDER

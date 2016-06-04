@@ -182,8 +182,8 @@ const extiConfig_t *selectMPUIntExtiConfig(void)
     return &MotolabF3MPU6050Config;
 #endif
 
-#if defined(KKNG)
-    static const extiConfig_t KKNGMPUIntExtiConfig = {
+#if defined(FURY)
+    static const extiConfig_t FURYMPUIntExtiConfig = {
             .gpioAHBPeripherals = RCC_AHBPeriph_GPIOA,
             .gpioPort = GPIOA,
             .gpioPin = Pin_3,
@@ -192,7 +192,8 @@ const extiConfig_t *selectMPUIntExtiConfig(void)
             .exti_line = EXTI_Line3,
             .exti_irqn = EXTI3_IRQn
     };
-    return &KKNGMPUIntExtiConfig;
+    return &FURYMPUIntExtiConfig;
+#endif
 
 #ifdef SINGULARITY
     static const extiConfig_t singularityMPU6050Config = {
