@@ -14,7 +14,7 @@ ALL_TARGETS += rmdo
 ALL_TARGETS += ircfusionf3
 ALL_TARGETS += afromini
 ALL_TARGETS += doge
-ALL_TARGETS += kkng
+ALL_TARGETS += fury
 ALL_TARGETS += singularity
 
 CLEAN_TARGETS     := $(addprefix clean_, $(ALL_TARGETS)) 
@@ -34,7 +34,7 @@ clean_motolab motolab :                   opts := TARGET=MOTOLAB
 clean_rmdo rmdo :                         opts := TARGET=RMDO
 clean_ircfusionf3 ircfusionf3 :           opts := TARGET=IRCFUSIONF3
 clean_afromini afromini :                 opts := TARGET=AFROMINI
-clean_kkng kkng :                         opts := TARGET=KKNG
+clean_fury fury :                         opts := TARGET=FURY
 clean_doge doge :                         opts := TARGET=DOGE
 clean_singularity singularity :           opts := TARGET=SINGULARITY
 

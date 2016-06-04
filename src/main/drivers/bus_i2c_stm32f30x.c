@@ -31,7 +31,7 @@
 #ifndef SOFT_I2C
 
 /*
-#if defined(KKNG)  // changedkb
+#if defined(FURY)  // changedkb
 
 #define I2C1_SCL_GPIO        GPIOB
 #define I2C1_SCL_GPIO_AF     GPIO_AF_4

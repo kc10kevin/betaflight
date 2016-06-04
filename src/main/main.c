@@ -426,7 +426,7 @@ void init(void)
     }
 #endif
 // addedkb
-#if defined(KKNG) && defined(SONAR) && defined(USE_SOFTSERIAL1)
+#if defined(FURY) && defined(SONAR) && defined(USE_SOFTSERIAL1)
     if (feature(FEATURE_SONAR) && feature(FEATURE_SOFTSERIAL)) {
         serialRemovePort(SERIAL_PORT_SOFTSERIAL1);
     }

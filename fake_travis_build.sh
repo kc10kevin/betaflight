@@ -17,7 +17,7 @@ targets=("PUBLISHMETA=True" \
     "TARGET=ALIENFLIGHTF1" \
     "TARGET=ALIENFLIGHTF3" \
     "TARGET=DOGE" \
-    "TARGET=KKNG" \
+    "TARGET=FURY" \
     "TARGET=SINGULARITY")
 
 #fake a travis build environment
