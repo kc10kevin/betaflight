@@ -17,7 +17,7 @@
 
 #pragma once
 
-#define TARGET_BOARD_IDENTIFIER "KKNG"
+#define TARGET_BOARD_IDENTIFIER "FURY"
 
 #define LED0
 
