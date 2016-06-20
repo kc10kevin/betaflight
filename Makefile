@@ -46,7 +46,7 @@ FORKNAME			 = betaflight
 
 CC3D_TARGETS = CC3D CC3D_OPBL
 
-VALID_TARGETS	 = NAZE NAZE32PRO OLIMEXINO STM32F3DISCOVERY CHEBUZZF3 $(CC3D_TARGETS) CJMCU EUSTM32F103RC SPRACINGF3 PORT103R SPARKY ALIENFLIGHTF1 ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO IRCFUSIONF3 AFROMINI SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE SINGULARITY
+VALID_TARGETS	 = NAZE NAZE32PRO OLIMEXINO STM32F3DISCOVERY CHEBUZZF3 $(CC3D_TARGETS) CJMCU EUSTM32F103RC SPRACINGF3 PORT103R SPARKY ALIENFLIGHTF1 ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO IRCFUSIONF3 AFROMINI SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE SINGULARITY FURYF3
 
 # Valid targets for OP VCP support
 VCP_VALID_TARGETS = $(CC3D_TARGETS)
@@ -57,9 +57,9 @@ OPBL_VALID_TARGETS = CC3D_OPBL
 64K_TARGETS  = CJMCU
 128K_TARGETS = ALIENFLIGHTF1 $(CC3D_TARGETS) NAZE OLIMEXINO RMDO AFROMINI
 
-256K_TARGETS = EUSTM32F103RC PORT103R STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE SINGULARITY
+256K_TARGETS = EUSTM32F103RC PORT103R STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE SINGULARITY FURYF3
 
-F3_TARGETS = STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO SPRACINGF3MINI SPRACINGF3EVO CC3DF3 DOGE SINGULARITY
+F3_TARGETS = STM32F3DISCOVERY CHEBUZZF3 NAZE32PRO SPRACINGF3 IRCFUSIONF3 SPARKY ALIENFLIGHTF3 COLIBRI_RACE LUX_RACE MOTOLAB RMDO SPRACINGF3MINI CC3DF3 SPRACINGF3EVO DOGE SINGULARITY FURYF3
 
 # note that there is no hardfault debugging startup file assembly handler for other platforms
 ifeq ($(DEBUG_HARDFAULTS),F3)
@@ -145,6 +145,13 @@ DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC)\
 endif
 
 ifeq ($(TARGET),SPRACINGF3MINI)
+INCLUDE_DIRS := $(INCLUDE_DIRS) \
+		   $(FATFS_DIR) \
+
+VPATH := $(VPATH):$(FATFS_DIR)
+endif
+
+ifeq ($(TARGET),FURY)
 INCLUDE_DIRS := $(INCLUDE_DIRS) \
 		   $(FATFS_DIR) \
 
@@ -830,6 +837,30 @@ SINGULARITY_SRC	 = \
 		   $(COMMON_SRC) \
 		   $(VCP_SRC)
 
+FURYF3_SRC = \
+		   $(STM32F30x_COMMON_SRC) \
+		   drivers/accgyro_mpu.c \
+		   drivers/barometer_ms5611.c \
+		   drivers/barometer_bmp280.c \
+		   drivers/display_ug2864hsweg01.c \
+		   drivers/accgyro_spi_mpu6000.c \
+		   drivers/accgyro_mpu6500.c \
+		   drivers/accgyro_spi_mpu6500.c \
+		   drivers/light_ws2811strip.c \
+		   drivers/light_ws2811strip_stm32f30x.c \
+		   drivers/serial_usb_vcp.c \
+		   drivers/sdcard.c \
+		   drivers/sdcard_standard.c \
+		   drivers/flash_m25p16.c \
+		   drivers/sonar_hcsr04.c \
+		   drivers/serial_softserial.c \
+		   io/asyncfatfs/asyncfatfs.c \
+		   io/asyncfatfs/fat_standard.c \
+		   io/flashfs.c \
+		   $(HIGHEND_SRC) \
+		   $(COMMON_SRC) \
+		   $(VCP_SRC)
+
 # Search path and source files for the ST stdperiph library
 VPATH		:= $(VPATH):$(STDPERIPH_DIR)/src
 
@@ -957,6 +988,16 @@ $(OBJECT_DIR)/$(TARGET)/%.o: %.S
 ## all         : default task; compile C code, build firmware
 all: binary
 
+## all_targets : build all valid target platforms
+all_targets:
+	for build_target in $(VALID_TARGETS); do \
+		echo "Building $$build_target" && \
+		make clean && \
+		make -j TARGET=$$build_target || \
+		break; \
+		echo "Building $$build_target succeeded."; \
+	done
+
 ## clean       : clean up all temporary / machine-generated files
 clean:
 	rm -f $(CLEAN_ARTIFACTS)
@@ -1005,6 +1046,10 @@ help: Makefile
 	@echo "Valid TARGET values are: $(VALID_TARGETS)"
 	@echo ""
 	@sed -n 's/^## //p' $<
+
+## targets     : print a list of all valid target platforms (for consumption by scripts)
+targets:
+	@echo $(VALID_TARGETS)
 
 ## test        : run the cleanflight test suite
 test:

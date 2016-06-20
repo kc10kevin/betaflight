@@ -566,7 +566,6 @@ const clivalue_t valueTable[] = {
     { "rssi_scale",                 VAR_UINT8  | MASTER_VALUE,  &masterConfig.rxConfig.rssi_scale, .config.minmax = { RSSI_SCALE_MIN,  RSSI_SCALE_MAX } },
     { "rssi_ppm_invert",            VAR_INT8   | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.rxConfig.rssi_ppm_invert, .config.lookup = { TABLE_OFF_ON } },
     { "input_filtering_mode",       VAR_INT8   | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.inputFilteringMode, .config.lookup = { TABLE_OFF_ON } },
-    { "rc_smoothing",               VAR_INT8   | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.rxConfig.rcSmoothing, .config.lookup = { TABLE_OFF_ON } },
     { "roll_yaw_cam_mix_degrees",   VAR_UINT8  | MASTER_VALUE,  &masterConfig.rxConfig.fpvCamAngleDegrees, .config.minmax = { 0,  50 } },
     { "max_aux_channels",           VAR_UINT8  | MASTER_VALUE,  &masterConfig.rxConfig.max_aux_channel, .config.minmax = { 0,  13 } },
     { "debug_mode",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.debug_mode, .config.lookup = { TABLE_DEBUG } },
@@ -738,9 +737,9 @@ const clivalue_t valueTable[] = {
     { "mag_hardware",               VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP,  &masterConfig.mag_hardware, .config.lookup = { TABLE_MAG_HARDWARE } },
     { "mag_declination",            VAR_INT16  | MASTER_VALUE, &masterConfig.mag_declination, .config.minmax = { -18000,  18000 } },
     { "dterm_lowpass",              VAR_INT16  | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.dterm_lpf_hz, .config.minmax = {0, 500 } },
-    { "dynamic_pid",                VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, &masterConfig.profile[0].pidProfile.dynamic_pid, .config.lookup = { TABLE_OFF_ON } },
-    { "iterm_ignore_threshold",     VAR_UINT16 | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.rollPitchItermIgnoreRate, .config.minmax = {50, 1000 } },
-    { "yaw_iterm_ignore_threshold", VAR_UINT16 | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.yawItermIgnoreRate, .config.minmax = {25, 1000 } },
+    { "dynamic_iterm",              VAR_UINT8  | PROFILE_VALUE | MODE_LOOKUP, &masterConfig.profile[0].pidProfile.dynamic_pid, .config.lookup = { TABLE_OFF_ON } },
+    { "iterm_ignore_threshold",     VAR_UINT16 | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.rollPitchItermIgnoreRate, .config.minmax = {15, 1000 } },
+    { "yaw_iterm_ignore_threshold", VAR_UINT16 | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.yawItermIgnoreRate, .config.minmax = {15, 1000 } },
     { "yaw_lowpass",                VAR_UINT16 | PROFILE_VALUE, &masterConfig.profile[0].pidProfile.yaw_lpf_hz, .config.minmax = {0, 500 } },
     { "pid_process_denom",          VAR_UINT8  | MASTER_VALUE,  &masterConfig.pid_process_denom, .config.minmax = { 1,  8 } },
 
@@ -2051,23 +2050,26 @@ static void cliDump(char *cmdline)
         
         if (dumpMask & DUMP_ALL) {
             uint8_t activeProfile = masterConfig.current_profile_index;
-            uint8_t currentRateIndex = currentProfile->activeRateProfile;
             uint8_t profileCount;
-            uint8_t rateCount;
             for (profileCount=0; profileCount<MAX_PROFILE_COUNT;profileCount++) {
                 cliDumpProfile(profileCount);
+
+                uint8_t currentRateIndex = currentProfile->activeRateProfile;
+                uint8_t rateCount;
                 for (rateCount=0; rateCount<MAX_RATEPROFILES; rateCount++)
                     cliDumpRateProfile(rateCount);
+
+                cliPrint("\r\n# restore original rateprofile selection\r\n");
+
+                changeControlRateProfile(currentRateIndex);
+                cliRateProfile("");
             }
 
-            cliPrint("\r\n# restore original profile / rateprofile selection\r\n");
+            cliPrint("\r\n# restore original profile selection\r\n");
 
             changeProfile(activeProfile);
             cliProfile("");
             printSectionBreak();
-
-            changeControlRateProfile(currentRateIndex);
-            cliRateProfile("");
 
             cliPrint("\r\n# save configuration\r\nsave\r\n");
         } else {

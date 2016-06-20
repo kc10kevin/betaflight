@@ -73,6 +73,10 @@
 #include "config/config_profile.h"
 #include "config/config_master.h"
 
+#ifndef DEFAULT_RX_FEATURE
+#define DEFAULT_RX_FEATURE FEATURE_RX_PARALLEL_PWM
+#endif
+
 #define BRUSHED_MOTORS_PWM_RATE 16000
 #define BRUSHLESS_MOTORS_PWM_RATE 400
 
@@ -152,14 +156,19 @@ static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
 
 static void resetPidProfile(pidProfile_t *pidProfile)
 {
+
+#if (defined(STM32F10X))
     pidProfile->pidController = 1;
+#else
+    pidProfile->pidController = 2;
+#endif
 
     pidProfile->P8[ROLL] = 45;
     pidProfile->I8[ROLL] = 40;
-    pidProfile->D8[ROLL] = 15;
-    pidProfile->P8[PITCH] = 45;
+    pidProfile->D8[ROLL] = 18;
+    pidProfile->P8[PITCH] = 50;
     pidProfile->I8[PITCH] = 40;
-    pidProfile->D8[PITCH] = 15;
+    pidProfile->D8[PITCH] = 18;
     pidProfile->P8[YAW] = 90;
     pidProfile->I8[YAW] = 45;
     pidProfile->D8[YAW] = 20;
@@ -186,8 +195,8 @@ static void resetPidProfile(pidProfile_t *pidProfile)
     pidProfile->yaw_p_limit = YAW_P_LIMIT_MAX;
     pidProfile->yaw_lpf_hz = 80;
     pidProfile->rollPitchItermIgnoreRate = 200;
-    pidProfile->yawItermIgnoreRate = 45;
-    pidProfile->dterm_lpf_hz = 110;    // filtering ON by default
+    pidProfile->yawItermIgnoreRate = 35;
+    pidProfile->dterm_lpf_hz = 50;    // filtering ON by default
     pidProfile->dynamic_pid = 1;
 
 #ifdef GTUNE
@@ -237,7 +246,7 @@ void resetEscAndServoConfig(escAndServoConfig_t *escAndServoConfig)
     escAndServoConfig->maxthrottle = 1850;
     escAndServoConfig->mincommand = 1000;
     escAndServoConfig->servoCenterPulse = 1500;
-    escAndServoConfig->escDesyncProtection = 10000;
+    escAndServoConfig->escDesyncProtection = 0;
 }
 
 void resetFlight3DConfig(flight3DConfig_t *flight3DConfig)
@@ -382,17 +391,12 @@ static void resetConf(void)
     memset(&masterConfig, 0, sizeof(master_t));
     setProfile(0);
 
-    masterConfig.version = EEPROM_CONF_VERSION;
-    masterConfig.mixerMode = MIXER_QUADX;
     featureClearAll();
 
-#if defined(CJMCU) || defined(SPARKY) || defined(COLIBRI_RACE) || defined(MOTOLAB) || defined(SPRACINGF3MINI) || defined(LUX_RACE) || defined(CC3DF3) || defined(DOGE) || defined(SINGULARITY)
-    featureSet(FEATURE_RX_PPM);
+    featureSet(DEFAULT_RX_FEATURE | FEATURE_FAILSAFE | FEATURE_SUPEREXPO_RATES);
+#ifdef DEFAULT_FEATURES
+    featureSet(DEFAULT_FEATURES);
 #endif
-
-//#if defined(SPRACINGF3MINI)
-//    featureSet(FEATURE_DISPLAY);
-//#endif
 
 #ifdef BOARD_HAS_VOLTAGE_DIVIDER
     // only enable the VBAT feature by default if the board has a voltage divider otherwise
@@ -400,8 +404,8 @@ static void resetConf(void)
     featureSet(FEATURE_VBAT);
 #endif
 
-    featureSet(FEATURE_FAILSAFE);
-    featureSet(FEATURE_SUPEREXPO_RATES);
+    masterConfig.version = EEPROM_CONF_VERSION;
+    masterConfig.mixerMode = MIXER_QUADX;
 
     // global settings
     masterConfig.current_profile_index = 0;     // default profile
@@ -459,7 +463,7 @@ static void resetConf(void)
     masterConfig.rxConfig.rssi_channel = 0;
     masterConfig.rxConfig.rssi_scale = RSSI_SCALE_DEFAULT;
     masterConfig.rxConfig.rssi_ppm_invert = 0;
-    masterConfig.rxConfig.rcSmoothing = 0;
+    masterConfig.rxConfig.rcSmoothing = 0; // TODO - Cleanup with next EEPROM changes
     masterConfig.rxConfig.fpvCamAngleDegrees = 0;
     masterConfig.rxConfig.max_aux_channel = 6;
     masterConfig.rxConfig.airModeActivateThreshold = 1350;
@@ -575,7 +579,6 @@ static void resetConf(void)
 #endif
 
 #if defined(SPRACINGF3) || defined(CC3DF3)
-    featureSet(FEATURE_BLACKBOX);
     masterConfig.blackbox_device = 1;
 #ifdef TRANSPONDER
     static const uint8_t defaultTransponderData[6] = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC }; // Note, this is NOT a valid transponder code, it's just for testing production hardware
@@ -597,22 +600,18 @@ static void resetConf(void)
     masterConfig.blackbox_rate_denom = 1;
 #endif
 
+#if defined(FURYF3)
+    masterConfig.blackbox_device = 2;
+    masterConfig.blackbox_rate_num = 1;
+    masterConfig.blackbox_rate_denom = 1;
+#endif
+
     // alternative defaults settings for COLIBRI RACE targets
 #if defined(COLIBRI_RACE)
     masterConfig.escAndServoConfig.minthrottle = 1025;
     masterConfig.escAndServoConfig.maxthrottle = 1980;
     masterConfig.batteryConfig.vbatmaxcellvoltage = 45;
     masterConfig.batteryConfig.vbatmincellvoltage = 30;
-
-    featureSet(FEATURE_VBAT);
-    featureSet(FEATURE_FAILSAFE);
-#endif
-
-#ifdef SPRACINGF3EVO
-    featureSet(FEATURE_TRANSPONDER);
-    featureSet(FEATURE_RSSI_ADC);
-    featureSet(FEATURE_CURRENT_METER);
-    featureSet(FEATURE_TELEMETRY);
 #endif
 
     // alternative defaults settings for ALIENFLIGHTF1 and ALIENFLIGHTF3 targets
@@ -693,14 +692,12 @@ static void resetConf(void)
 
     // alternative defaults settings for SINGULARITY target
 #if defined(SINGULARITY)
-    featureSet(FEATURE_BLACKBOX);
     masterConfig.blackbox_device = 1;
     masterConfig.blackbox_rate_num = 1;
     masterConfig.blackbox_rate_denom = 1;
     
     masterConfig.batteryConfig.vbatscale = 77;
 
-    featureSet(FEATURE_RX_SERIAL);
     masterConfig.serialConfig.portConfigs[2].functionMask = FUNCTION_RX_SERIAL;
 #endif
 
@@ -817,7 +814,7 @@ void activateConfig(void)
 void validateAndFixConfig(void)
 {
     if (!(featureConfigured(FEATURE_RX_PARALLEL_PWM) || featureConfigured(FEATURE_RX_PPM) || featureConfigured(FEATURE_RX_SERIAL) || featureConfigured(FEATURE_RX_MSP))) {
-        featureSet(FEATURE_RX_PARALLEL_PWM); // Consider changing the default to PPM
+        featureSet(FEATURE_RX_PARALLEL_PWM);
     }
 
     if (featureConfigured(FEATURE_RX_PPM)) {
