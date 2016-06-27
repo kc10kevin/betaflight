@@ -145,7 +145,7 @@ static uint32_t activeFeaturesLatch = 0;
 static uint8_t currentControlRateProfileIndex = 0;
 controlRateConfig_t *currentControlRateProfile;
 
-static const uint8_t EEPROM_CONF_VERSION = 140;
+static const uint8_t EEPROM_CONF_VERSION = 141;
 
 static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
 {
@@ -154,13 +154,13 @@ static void resetAccelerometerTrims(flightDynamicsTrims_t *accelerometerTrims)
     accelerometerTrims->values.yaw = 0;
 }
 
-static void resetPidProfile(pidProfile_t *pidProfile)
+void resetPidProfile(pidProfile_t *pidProfile)
 {
 
 #if (defined(STM32F10X))
-    pidProfile->pidController = 1;
+    pidProfile->pidController = PID_CONTROLLER_INTEGER;
 #else
-    pidProfile->pidController = 2;
+    pidProfile->pidController = PID_CONTROLLER_FLOAT;
 #endif
 
     pidProfile->P8[ROLL] = 45;
@@ -169,7 +169,7 @@ static void resetPidProfile(pidProfile_t *pidProfile)
     pidProfile->P8[PITCH] = 50;
     pidProfile->I8[PITCH] = 40;
     pidProfile->D8[PITCH] = 18;
-    pidProfile->P8[YAW] = 90;
+    pidProfile->P8[YAW] = 80;
     pidProfile->I8[YAW] = 45;
     pidProfile->D8[YAW] = 20;
     pidProfile->P8[PIDALT] = 50;
@@ -194,9 +194,10 @@ static void resetPidProfile(pidProfile_t *pidProfile)
 
     pidProfile->yaw_p_limit = YAW_P_LIMIT_MAX;
     pidProfile->yaw_lpf_hz = 80;
-    pidProfile->rollPitchItermIgnoreRate = 200;
+    pidProfile->rollPitchItermIgnoreRate = 180;
     pidProfile->yawItermIgnoreRate = 35;
-    pidProfile->dterm_lpf_hz = 50;    // filtering ON by default
+    pidProfile->dterm_lpf_hz = 100;    // filtering ON by default
+    pidProfile->deltaMethod = DELTA_FROM_MEASUREMENT;
     pidProfile->dynamic_pid = 1;
 
 #ifdef GTUNE
@@ -463,7 +464,7 @@ static void resetConf(void)
     masterConfig.rxConfig.rssi_channel = 0;
     masterConfig.rxConfig.rssi_scale = RSSI_SCALE_DEFAULT;
     masterConfig.rxConfig.rssi_ppm_invert = 0;
-    masterConfig.rxConfig.rcSmoothing = 0; // TODO - Cleanup with next EEPROM changes
+    masterConfig.rxConfig.rcSmoothInterval = 0; // 0 is predefined
     masterConfig.rxConfig.fpvCamAngleDegrees = 0;
     masterConfig.rxConfig.max_aux_channel = 6;
     masterConfig.rxConfig.airModeActivateThreshold = 1350;
