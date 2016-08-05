@@ -575,8 +575,8 @@ void createDefaultConfig(master_t *config)
 
     config->servo_pwm_rate = 50;
 
-#ifdef CC3D
-    config->use_buzzer_p6 = 0;
+#if defined(CC3D) || defined(CC3DF3)
+    masterConfig.use_buzzer_p6 = 0;
 #endif
 
 #ifdef GPS
@@ -884,7 +884,7 @@ void validateAndFixConfig(void)
     }
 #endif
 
-#if defined(CC3D) && defined(DISPLAY) && defined(USE_UART3)
+#if (defined(CC3D) || defined(CC3DF3)) && defined(DISPLAY) && defined(USE_UART3)
     if (doesConfigurationUsePort(SERIAL_PORT_USART3) && feature(FEATURE_DISPLAY)) {
         featureClear(FEATURE_DISPLAY);
     }
@@ -903,7 +903,7 @@ void validateAndFixConfig(void)
 #endif
 */
 
-#if defined(CC3D) && defined(SONAR) && defined(USE_SOFTSERIAL1) && defined(RSSI_ADC_GPIO)
+#if (defined(CC3D) || defined(CC3DF3)) && defined(SONAR) && defined(USE_SOFTSERIAL1) && defined(RSSI_ADC_GPIO)
     // shared pin
     if ((featureConfigured(FEATURE_SONAR) + featureConfigured(FEATURE_SOFTSERIAL) + featureConfigured(FEATURE_RSSI_ADC)) > 1) {
         featureClear(FEATURE_SONAR);
