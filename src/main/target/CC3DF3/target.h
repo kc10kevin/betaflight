@@ -83,8 +83,8 @@
 #define USE_ADC
 #define ADC_INSTANCE            ADC1
 #define VBAT_ADC_PIN            PA0
-#define RSSI_ADC_PIN            PA1
-//#define CURRENT_METER_ADC_PIN   PB1
+//#define RSSI_ADC_PIN            PA1
+#define CURRENT_METER_ADC_PIN   PA1
 
 #define LED_STRIP
 
