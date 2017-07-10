@@ -27,9 +27,9 @@
 #define BEEPER                  PC13
 #define BEEPER_INVERTED
 
-#define USE_EXTI
-#define MPU_INT_EXTI            PC4
-#define USE_MPU_DATA_READY_SIGNAL
+//#define USE_EXTI
+//#define MPU_INT_EXTI            PC4
+//#define USE_MPU_DATA_READY_SIGNAL
 //#define ENSURE_MPU_DATA_READY_IS_LOW
 
 #define ICM20689_CS_PIN          PA4
@@ -42,6 +42,21 @@
 #define ACC
 #define USE_ACC_SPI_ICM20689
 #define ACC_ICM20689_ALIGN       CW180_DEG
+
+#define MPU6500_CS_PIN          PB0
+#define MPU6500_SPI_INSTANCE    SPI2
+
+#define USE_GYRO_MPU6500
+#define USE_GYRO_SPI_MPU6500
+#define GYRO_MPU6500_ALIGN      CW270_DEG
+
+#define USE_ACC_MPU6500
+#define USE_ACC_SPI_MPU6500
+#define ACC_MPU6500_ALIGN       CW270_DEG
+
+#define USE_DUAL_GYRO
+#define GYRO_0_CS_PIN           ICM20689_CS_PIN
+#define GYRO_1_CS_PIN           MPU6500_CS_PIN
 
 //#define BARO
 //#define USE_BARO_MS5611
@@ -84,7 +99,7 @@
 // Divide to under 25MHz for normal operation:
 #define SDCARD_SPI_FULL_SPEED_CLOCK_DIVIDER     8 // 21MHz
 
-#define SDCARD_DMA_CHANNEL_TX               DMA1_Stream7
+#define SDCARD_DMA_CHANNEL_TX               DMA1_Stream5
 #define SDCARD_DMA_CHANNEL_TX_COMPLETE_FLAG DMA_FLAG_TCIF1_5
 //#define SDCARD_DMA_CHANNEL_TX_COMPLETE_FLAG DMA_FLAG_TCIF5
 #define SDCARD_DMA_CLK                      RCC_AHB1Periph_DMA1
@@ -113,9 +128,9 @@
 #define UART3_RX_PIN            PB11
 #define UART3_TX_PIN            PB10
 
-//#define USE_UART4
-//#define UART4_RX_PIN            PA1
-//#define UART4_TX_PIN            PA0
+#define USE_UART4
+#define UART4_RX_PIN            PA1
+#define UART4_TX_PIN            PA0
 
 #define USE_UART6
 #define UART6_RX_PIN            PC7
@@ -124,7 +139,7 @@
 #define USE_SOFTSERIAL1
 #define USE_SOFTSERIAL2
 
-#define SERIAL_PORT_COUNT       6 //VCP, USART1, USART3, USART6, SOFTSERIAL x 2
+#define SERIAL_PORT_COUNT       7 //VCP, USART1, USART3, USART4, USART6, SOFTSERIAL x 2
 
 #define USE_ESCSERIAL
 #define ESCSERIAL_TIMER_TX_HARDWARE 0 // PWM 1
@@ -163,4 +178,4 @@
 #define TARGET_IO_PORTD         (BIT(2))
 
 #define USABLE_TIMER_CHANNEL_COUNT 6
-#define USED_TIMERS             ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) | TIM_N(5) | TIM_N(8))
+#define USED_TIMERS             ( TIM_N(1) | TIM_N(2) | TIM_N(3) | TIM_N(4) )
