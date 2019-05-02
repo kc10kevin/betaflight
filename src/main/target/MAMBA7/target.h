@@ -20,8 +20,12 @@
 
 #pragma once
 
-    #define TARGET_BOARD_IDENTIFIER "MBF7"
-    #define USBD_PRODUCT_STRING     "MAMBAF7"
+#define USE_TARGET_CONFIG
+
+#define TARGET_BOARD_IDENTIFIER "MBF7"
+#define USBD_PRODUCT_STRING     "MambaF7"
+
+// ******* LEDs and BEEPER ********
 
 #define LED0_PIN                PC15
 #define LED1_PIN                PC14
@@ -32,8 +36,8 @@
 
 #define ENABLE_DSHOT_DMAR       true
 
-//#define USE_PINIO
-//#define PINIO1_PIN PB0 // Bluetooth mode control, PB0 is connected to the 36 pin (P2.0) of the Bluetooth chip. Replace PB0 with the pin for your flight control and 36-pin connection
+#define USE_PINIO
+#define PINIO1_PIN PB0 // Bluetooth mode control, PB0 is connected to the 36 pin (P2.0) of the Bluetooth chip. Replace PB0 with the pin for your flight control and 36-pin connection
 
 // ******* GYRO and ACC ********
 

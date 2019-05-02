@@ -21,22 +21,27 @@
 #include <stdint.h>
 
 #include "platform.h"
-#include "drivers/io.h"
 
-#include "drivers/dma.h"
-#include "drivers/timer.h"
-#include "drivers/timer_def.h"
+#ifdef USE_TARGET_CONFIG
 
-const timerHardware_t timerHardware[USABLE_TIMER_CHANNEL_COUNT] = {
+#include "io/serial.h"
+#include "pg/pinio.h"
+#include "pg/piniobox.h"
+#include "target.h"
 
-    DEF_TIM(TIM11,  CH1,  PB9,   TIM_USE_PPM,   0, 0 ), // PPM IN
-    DEF_TIM(TIM8,   CH3,  PC8,   TIM_USE_MOTOR, 0, 0 ), // S4_OUT – DMA2_ST2, *DMA2_ST4
-    DEF_TIM(TIM8,   CH4,  PC9,   TIM_USE_MOTOR, 0, 0 ), // S3_OUT – DMA2_ST7
-    DEF_TIM(TIM1,   CH1,  PA8,   TIM_USE_MOTOR, 0, 0 ), // S2_OUT –  DMA2_ST6, *DMA2_ST1, DMA2_ST3
-    DEF_TIM(TIM1,   CH2,  PA9,   TIM_USE_MOTOR, 0, 0 ), // S1_OUT – *DMA2_ST6,  DMA2_ST2
-    
-    DEF_TIM(TIM4,   CH3,  PB8,   TIM_USE_CAMERA_CONTROL,   0, 0 ), // FC CAM – DMA1_ST7
+#define BLUETOOTH_MSP_UART SERIAL_PORT_UART4 // Replace this with the serial number of the flight controller connected to the Bluetooth chip, for example, serial port 4, then change to SERIAL_PORT_UART4
 
-    DEF_TIM(TIM2,   CH2,  PB3,   TIM_USE_LED,   0, 0 ), // LED_STRIP – DMA1_ST6
+#define BLUETOOTH_MSP_BAUDRATE BAUD_19200
 
-};
+void targetConfiguration(void)
+{
+    pinioConfigMutable()->config[0] = PINIO_CONFIG_OUT_INVERTED | PINIO_CONFIG_MODE_OUT_PP;
+    pinioBoxConfigMutable()->permanentId[0] = BOXARM;
+
+    serialPortConfig_t *bluetoothMspUART = serialFindPortConfiguration(BLUETOOTH_MSP_UART);
+    if (bluetoothMspUART) {
+        bluetoothMspUART->functionMask = FUNCTION_MSP;
+        bluetoothMspUART->msp_baudrateIndex = BLUETOOTH_MSP_BAUDRATE;
+    }
+}
+#endif
