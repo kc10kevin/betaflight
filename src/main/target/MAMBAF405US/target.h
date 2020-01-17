@@ -22,8 +22,8 @@
 
 #define USE_TARGET_CONFIG
 
-#define TARGET_BOARD_IDENTIFIER "MBF7"
-#define USBD_PRODUCT_STRING     "MAMBAF722"
+#define TARGET_BOARD_IDENTIFIER "MBF4"
+#define USBD_PRODUCT_STRING     "MAMBAF405US"
 
 // ******* LEDs and BEEPER ********
 
@@ -31,8 +31,10 @@
 #define LED1_PIN                PC14
 
 #define USE_BEEPER
-#define BEEPER_PIN              PB2
+#define BEEPER_PIN              PC13
 #define BEEPER_INVERTED
+
+#define INVERTER_PIN_UART1      PC0 // PC0 used as inverter select GPIO
 
 #define ENABLE_DSHOT_DMAR       DSHOT_DMAR_ON
 
