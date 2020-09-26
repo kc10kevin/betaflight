@@ -22,8 +22,8 @@
 
 #define USE_TARGET_CONFIG
 
-#define TARGET_BOARD_IDENTIFIER "MBF7"
-#define USBD_PRODUCT_STRING     "MAMBAF722"
+#define TARGET_BOARD_IDENTIFIER "MBF4"
+#define USBD_PRODUCT_STRING     "MAMBAF405US"
 
 // ******* LEDs and BEEPER ********
 
@@ -31,8 +31,10 @@
 #define LED1_PIN                PC14
 
 #define USE_BEEPER
-#define BEEPER_PIN              PB2
+#define BEEPER_PIN              PC13
 #define BEEPER_INVERTED
+
+#define INVERTER_PIN_UART1      PC0 // PC0 used as inverter select GPIO
 
 #define ENABLE_DSHOT_DMAR       DSHOT_DMAR_ON
 
@@ -56,12 +58,14 @@
 #define USE_ACC
 #define USE_ACC_SPI_MPU6000
 
+#define USE_ACCGYRO_BMI160
+#ifdef USE_ACCGYRO_BMI160
+#define BMI160_SPI_DIVISOR      16
+#endif
+
 // ******* SERIAL ********
 
 #define USE_VCP
-#define USE_USB_DETECT
-#define USB_DETECT_PIN          PC13
-
 #define USE_UART1
 #define USE_UART2
 #define USE_UART3
@@ -93,14 +97,8 @@
 #define SERIAL_PORT_COUNT       9 //VCP, UART1-UART6 , 2 x Soft Serial
 
 #define USE_BARO
-#define USE_BARO_MS5611
-#define USE_BARO_BMP280
-//#define MS5611_I2C_INSTANCE     I2CDEV_1
 
 #define USE_MAG
-#define USE_MAG_HMC5883
-#define USE_MAG_QMC5883
-#define USE_MAG_LIS3MDL
 
 #define USE_I2C
 #define USE_I2C_DEVICE_1
