@@ -89,6 +89,13 @@
 
 #define SERIAL_PORT_COUNT       9 //VCP, UART1-UART6 , 2 x Soft Serial
 
+#define USE_I2C
+#define USE_I2C_DEVICE_1
+#define I2C_DEVICE              (I2CDEV_1)
+#define USE_I2C_PULLUP
+#define I2C1_SCL                PB8
+#define I2C1_SDA                PB9
+
 // ******* SPI ********
 
 #define USE_SPI
