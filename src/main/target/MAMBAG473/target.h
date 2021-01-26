@@ -34,7 +34,7 @@
 #define BEEPER_PIN              PC13
 #define BEEPER_INVERTED
 
-//#define ENABLE_DSHOT_DMAR       DSHOT_DMAR_ON
+#define ENABLE_DSHOT_DMAR       DSHOT_DMAR_ON
 
 //#define USE_PINIO
 //#define PINIO1_PIN PB0 // Bluetooth mode control, PB0 is connected to the 36 pin (P2.0) of the Bluetooth chip. Replace PB0 with the pin for your flight control and 36-pin connection
@@ -110,6 +110,19 @@
 #define I2C1_SCL                PA13
 #define I2C1_SDA                PA14
 
+#define BARO_I2C_INSTANCE       I2C_DEVICE
+#define MAG_I2C_INSTANCE        I2C_DEVICE
+
+#define USE_MAG
+#define USE_MAG_HMC5883                   //External, connect to I2C1
+#define USE_MAG_QMC5883
+#define USE_MAG_LIS3MDL
+#define MAG_HMC5883_ALIGN       CW180_DEG
+
+#define USE_BARO
+#define USE_BARO_MS5611                  //External, connect to I2C1
+#define USE_BARO_BMP280                  //onboard
+
 // ******* ADC ********
 
 #define USE_ADC
@@ -156,4 +169,4 @@
 #define TARGET_IO_PORTD         (BIT(2))
 
 #define USABLE_TIMER_CHANNEL_COUNT 5
-#define USED_TIMERS             ( TIM_N(2) | TIM_N(4) )
+#define USED_TIMERS             ( TIM_N(2) | TIM_N(8) )

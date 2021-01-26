@@ -1349,7 +1349,6 @@
 #define DEF_TIM_AF__PB14__TCH_TIM1_CH2N   D(6, 1)
 
 #define DEF_TIM_AF__PB5__TCH_TIM17_CH1    D(10, 17)
-#define DEF_TIM_AF__PB6__TCH_TIM8_CH1     D(10, 8)
 #define DEF_TIM_AF__PB7__TCH_TIM3_CH4     D(10, 3)
 #define DEF_TIM_AF__PB8__TCH_TIM8_CH2     D(10, 8)
 #define DEF_TIM_AF__PB9__TCH_TIM8_CH3     D(10, 8)
